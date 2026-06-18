@@ -1,0 +1,139 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ----------------------------------------------------------------------------
+// Better Auth core models (provider: github). Accessor names (prisma.user,
+// prisma.session, ...) are what the Better Auth Prisma adapter expects.
+// ----------------------------------------------------------------------------
+
+model User {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions    Session[]
+  accounts    Account[]
+  connections Connection[]
+  activities  Activity[]
+  resume      Resume?
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ----------------------------------------------------------------------------
+// Domain models. String fields over enums/Json/arrays for SQLite <-> Postgres
+// portability; JSON payloads (metrics, raw) stored as stringified text.
+// ----------------------------------------------------------------------------
+
+/// A connected work surface (GitHub today; Linear/Asana/Jira later).
+model Connection {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider   String // "github" | "linear" | "asana" | "jira"
+  externalId String? // provider account id / login
+  scopes     String? // space-delimited granted scopes
+  lastSyncAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, provider])
+}
+
+/// A normalized unit of work pulled from a provider, carrying provenance (url).
+model Activity {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider   String // "github"
+  type       String // "repo" | "pull_request" | "issue" | "commit" | "org"
+  externalId String // provider-native id, for idempotent upserts
+  title      String
+  body       String?
+  url        String // provenance / sourceUrl
+  metrics    String? // JSON text: { additions, deletions, stars, ... }
+  occurredAt DateTime?
+  raw        String // JSON text of the raw provider payload
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  evidenceFor ResumeItem[] @relation("ResumeItemEvidence")
+
+  @@unique([provider, type, externalId])
+  @@index([userId, occurredAt])
+}
+
+/// The synthesized, user-editable resume (one per user for the MVP).
+model Resume {
+  id        String       @id @default(cuid())
+  userId    String       @unique
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline  String?
+  summary   String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  items     ResumeItem[]
+}
+
+/// A single synthesized line/section, linked to its evidence Activities.
+model ResumeItem {
+  id        String     @id @default(cuid())
+  resumeId  String
+  resume    Resume     @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  kind      String // "experience" | "project" | "skill" | "highlight"
+  content   String
+  order     Int        @default(0)
+  status    String     @default("draft") // "draft" | "accepted"
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  evidence  Activity[] @relation("ResumeItemEvidence")
+}
