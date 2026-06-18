@@ -46,3 +46,7 @@ next-env.d.ts
 # local sqlite db
 *.db
 *.db-journal
+
+# design handoff artifacts (Claude Design export)
+/design/
+*.zip
