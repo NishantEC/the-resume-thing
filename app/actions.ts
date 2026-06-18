@@ -99,3 +99,21 @@ export async function toggleIgnoreRepoAction(
   revalidatePath("/activity");
   revalidateReview();
 }
+
+export async function toggleIgnoreOrgAction(
+  org: string,
+  ignored: boolean,
+): Promise<void> {
+  const userId = await requireUserId();
+  if (ignored) {
+    await prisma.ignoredOrg.upsert({
+      where: { userId_org: { userId, org } },
+      create: { userId, org },
+      update: {},
+    });
+  } else {
+    await prisma.ignoredOrg.deleteMany({ where: { userId, org } });
+  }
+  revalidatePath("/activity");
+  revalidateReview();
+}

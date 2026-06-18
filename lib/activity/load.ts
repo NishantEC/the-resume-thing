@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { filterIgnored, ignoredRepoSet } from "@/lib/repos";
+import { filterIgnored, ignoreSets } from "@/lib/repos";
 
 export type ActivityStat = { n: string; label: string };
 export type RecentItem = {
@@ -53,7 +53,7 @@ export async function loadActivity(userId: string): Promise<ActivityView> {
       orderBy: [{ occurredAt: "desc" }],
       select: { id: true, title: true, type: true, url: true, metrics: true },
     }),
-    ignoredRepoSet(userId),
+    ignoreSets(userId),
     prisma.connection.findUnique({
       where: { userId_provider: { userId, provider: "github" } },
       select: { lastSyncAt: true },
@@ -71,6 +71,7 @@ export async function loadActivity(userId: string): Promise<ActivityView> {
   }
 
   const stats: ActivityStat[] = [
+    { n: String(countOf("commit")), label: "commits" },
     { n: String(countOf("pull_request")), label: "merged PRs" },
     { n: String(countOf("issue")), label: "issues" },
     { n: String(countOf("repo")), label: "repositories" },

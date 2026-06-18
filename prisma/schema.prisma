@@ -30,6 +30,7 @@ model User {
   activities  Activity[]
   resume      Resume?
   ignoredRepos IgnoredRepo[]
+  ignoredOrgs  IgnoredOrg[]
 }
 
 model Session {
@@ -154,4 +155,15 @@ model IgnoredRepo {
   createdAt DateTime @default(now())
 
   @@unique([userId, repo])
+}
+
+/// An organization the user has chosen to exclude entirely.
+model IgnoredOrg {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org       String // org login
+  createdAt DateTime @default(now())
+
+  @@unique([userId, org])
 }

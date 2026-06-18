@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { defaultLlmClient, type LlmClient } from "./llm";
 import { buildResumePrompt, type ActivityLite } from "./prompt";
-import { filterIgnored, ignoredRepoSet } from "@/lib/repos";
+import { filterIgnored, ignoreSets } from "@/lib/repos";
 
 const MAX_ACTIVITIES = 150;
 
@@ -20,7 +20,7 @@ export async function synthesizeResume(
     orderBy: [{ occurredAt: "desc" }],
     take: MAX_ACTIVITIES,
   });
-  const ignored = await ignoredRepoSet(userId);
+  const ignored = await ignoreSets(userId);
   const kept = filterIgnored(rows, ignored);
   console.log(
     `[synthesis] loaded ${rows.length} activities, ${kept.length} after ignore`,

@@ -1,7 +1,7 @@
 // Pure mappers: GitHub API payloads -> normalized Activity rows.
 // Each carries `url` (provenance) and a stable `externalId` for idempotent upserts.
 
-export type ActivityType = "repo" | "pull_request" | "issue" | "org";
+export type ActivityType = "repo" | "pull_request" | "issue" | "org" | "commit";
 
 export interface NormalizedActivity {
   provider: "github";
@@ -45,6 +45,13 @@ export interface OrgInput {
   id: number;
   login: string;
   description?: string | null;
+}
+
+export interface CommitInput {
+  sha: string;
+  html_url: string;
+  commit: { message: string; author: { date: string | null } | null };
+  repository?: { full_name: string } | null;
 }
 
 export function normalizeRepo(repo: RepoInput): NormalizedActivity {
@@ -113,6 +120,22 @@ export function normalizeOrg(org: OrgInput): NormalizedActivity {
     metrics: null,
     occurredAt: null,
     raw: JSON.stringify({ login: org.login, description: org.description ?? null }),
+  };
+}
+
+export function normalizeCommit(item: CommitInput): NormalizedActivity {
+  const firstLine = item.commit.message.split("\n")[0].trim();
+  const repo = item.repository?.full_name ?? null;
+  return {
+    provider: "github",
+    type: "commit",
+    externalId: `commit:${item.sha}`,
+    title: firstLine || item.sha.slice(0, 7),
+    body: null,
+    url: item.html_url,
+    metrics: JSON.stringify({ repo }),
+    occurredAt: toDate(item.commit.author?.date ?? null),
+    raw: JSON.stringify({ sha: item.sha, repo, message: firstLine }),
   };
 }
 

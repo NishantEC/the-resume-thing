@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { githubForUser } from "./client";
 import {
+  normalizeCommit,
   normalizeIssueOrPr,
   normalizeOrg,
   normalizeRepo,
@@ -25,11 +26,11 @@ export async function syncGithub(userId: string): Promise<SyncResult> {
 
   const repos = await gh.paginate(gh.repos.listForAuthenticatedUser, {
     per_page: 100,
-    affiliation: "owner,collaborator,organization_member",
+    affiliation: "owner",
     sort: "pushed",
   });
   for (const repo of repos) activities.push(normalizeRepo(repo));
-  console.log(`[sync] ${repos.length} repos`);
+  console.log(`[sync] ${repos.length} owned repos`);
 
   const prs = await gh.paginate(gh.search.issuesAndPullRequests, {
     q: `author:${me.login} type:pr`,
@@ -44,6 +45,15 @@ export async function syncGithub(userId: string): Promise<SyncResult> {
   });
   for (const issue of issues) activities.push(normalizeIssueOrPr(issue, "issue"));
   console.log(`[sync] ${issues.length} issues`);
+
+  const commits = await gh.search.commits({
+    q: `author:${me.login}`,
+    sort: "author-date",
+    order: "desc",
+    per_page: 100,
+  });
+  for (const c of commits.data.items) activities.push(normalizeCommit(c));
+  console.log(`[sync] ${commits.data.items.length} commits`);
 
   const orgs = await gh.paginate(gh.orgs.listForAuthenticatedUser, {
     per_page: 100,
