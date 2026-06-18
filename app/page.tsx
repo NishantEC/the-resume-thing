@@ -2,6 +2,8 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { SignInButton } from "@/components/auth/sign-in-button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
 
 export default async function Home(): Promise<React.ReactElement> {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -29,7 +31,12 @@ export default async function Home(): Promise<React.ReactElement> {
               Signed in with GitHub
             </span>
           </div>
-          <SignOutButton />
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard" className={buttonVariants({ size: "sm" })}>
+              Open dashboard
+            </Link>
+            <SignOutButton />
+          </div>
         </section>
       ) : (
         <section className="flex flex-col items-start gap-3">
