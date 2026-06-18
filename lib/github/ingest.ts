@@ -50,6 +50,31 @@ export async function syncGithub(userId: string): Promise<SyncResult> {
   });
   for (const org of orgs) activities.push(normalizeOrg(org));
   console.log(`[sync] ${orgs.length} orgs; upserting ${activities.length} activities`);
+  // Best-effort: enrich PRs with diff stats (additions/deletions) for evidence.
+  const prActivities = activities.filter((a) => a.type === "pull_request");
+  const CONCURRENCY = 8;
+  for (let i = 0; i < prActivities.length; i += CONCURRENCY) {
+    await Promise.all(
+      prActivities.slice(i, i + CONCURRENCY).map(async (a) => {
+        const m = a.url.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
+        if (!m) return;
+        try {
+          const { data } = await gh.pulls.get({
+            owner: m[1],
+            repo: m[2],
+            pull_number: Number(m[3]),
+          });
+          const metrics = a.metrics ? JSON.parse(a.metrics) : {};
+          metrics.additions = data.additions;
+          metrics.deletions = data.deletions;
+          a.metrics = JSON.stringify(metrics);
+        } catch {
+          // Skip diff stats for this PR; not fatal.
+        }
+      }),
+    );
+  }
+  console.log(`[sync] enriched ${prActivities.length} PRs with diff stats`);
 
   const byType: Record<string, number> = {};
   for (const a of activities) {
@@ -80,9 +105,10 @@ export async function syncGithub(userId: string): Promise<SyncResult> {
       userId,
       provider: "github",
       externalId: String(me.id),
+      handle: me.login,
       lastSyncAt: new Date(),
     },
-    update: { lastSyncAt: new Date(), externalId: String(me.id) },
+    update: { lastSyncAt: new Date(), externalId: String(me.id), handle: me.login },
   });
   console.log(`[sync] done: imported ${activities.length}`);
 

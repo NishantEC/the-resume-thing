@@ -1,9 +1,14 @@
 import { jsonSchema } from "ai";
 
-export type ResumeKind = "experience" | "project" | "skill" | "highlight";
+export interface ResumeDraftSkill {
+  label: string;
+  list: string;
+}
 
 export interface ResumeDraftItem {
-  kind: ResumeKind;
+  project: string;
+  projectMeta: string;
+  projectUrl: string;
   content: string;
   evidenceUrls: string[];
 }
@@ -11,6 +16,7 @@ export interface ResumeDraftItem {
 export interface ResumeDraft {
   headline: string;
   summary: string;
+  skills: ResumeDraftSkill[];
   items: ResumeDraftItem[];
 }
 
@@ -22,35 +28,61 @@ export const resumeDraftSchema = jsonSchema<ResumeDraft>({
   properties: {
     headline: {
       type: "string",
-      description: "A short professional headline, e.g. 'Senior Backend Engineer'.",
+      description: "A short professional headline, e.g. 'Platform Engineer · Developer Tooling'.",
     },
     summary: {
       type: "string",
       description: "A 2-3 sentence professional summary.",
     },
-    items: {
+    skills: {
       type: "array",
-      description: "Accomplishment bullets, curated and deduped from the activity.",
+      description:
+        "3-4 labeled skill groups inferred from the activity, e.g. { label: 'Languages', list: 'Go, TypeScript' }.",
       items: {
         type: "object",
         properties: {
-          kind: {
+          label: { type: "string", description: "Group name, e.g. 'Languages', 'Infrastructure', 'Focus'." },
+          list: { type: "string", description: "Comma-separated skills." },
+        },
+        required: ["label", "list"],
+      },
+    },
+    items: {
+      type: "array",
+      description: "Accomplishment bullets, each grouped under a project.",
+      items: {
+        type: "object",
+        properties: {
+          project: {
             type: "string",
-            enum: ["experience", "project", "skill", "highlight"],
+            description: "Project/repo display name; use 'Open Source' for cross-repo or profile-level work.",
           },
-          content: {
+          projectMeta: {
             type: "string",
-            description: "One impactful, resume-ready line.",
+            description: "Short descriptor: role · stars · languages, e.g. 'Maintainer · 4.2k★ · TypeScript, Go'.",
           },
+          projectUrl: { type: "string", description: "Repository or profile URL." },
+          content: { type: "string", description: "One impactful, resume-ready line." },
           evidenceUrls: {
             type: "array",
             description: "Source activity URLs backing this item.",
             items: { type: "string" },
           },
         },
-        required: ["kind", "content", "evidenceUrls"],
+        required: ["project", "projectMeta", "projectUrl", "content", "evidenceUrls"],
       },
     },
   },
-  required: ["headline", "summary", "items"],
+  required: ["headline", "summary", "skills", "items"],
+});
+
+export const bulletSchema = jsonSchema<{ content: string }>({
+  type: "object",
+  properties: {
+    content: {
+      type: "string",
+      description: "The rewritten resume bullet — one impactful, evidence-grounded line.",
+    },
+  },
+  required: ["content"],
 });

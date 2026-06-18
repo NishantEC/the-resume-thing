@@ -1,14 +1,15 @@
 import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
-import { resumeDraftSchema, type ResumeDraft } from "./schema";
+import { bulletSchema, resumeDraftSchema, type ResumeDraft } from "./schema";
 
 /**
- * Synthesis seam. Returns a validated ResumeDraft (structured output), so
- * callers/tests can inject a fake and never touch the network.
+ * Synthesis seam. Returns validated structured output, so callers/tests can
+ * inject a fake and never touch the network.
  */
 export interface LlmClient {
   draftResume(system: string, user: string): Promise<ResumeDraft>;
+  rewriteBullet(system: string, user: string): Promise<string>;
 }
 
 // Generous budget: thinking models (e.g. Gemini 2.5/3.x flash) spend output
@@ -68,6 +69,17 @@ export function defaultLlmClient(): LlmClient {
         `[synthesis] llm: received ${object.items.length} items in ${Date.now() - startedAt}ms`,
       );
       return object;
+    },
+
+    async rewriteBullet(system: string, user: string): Promise<string> {
+      const { object } = await generateObject({
+        model,
+        schema: bulletSchema,
+        system,
+        prompt: user,
+        maxOutputTokens: 1024,
+      });
+      return object.content;
     },
   };
 }

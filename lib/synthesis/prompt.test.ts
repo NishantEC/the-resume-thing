@@ -11,12 +11,11 @@ const sample: ActivityLite = {
 };
 
 describe("buildResumePrompt", () => {
-  it("system message pins JSON output and the four kinds", () => {
+  it("system message pins the project-grouped ResumeDraft contract", () => {
     const { system } = buildResumePrompt({ name: "Ada", activities: [sample] });
-    expect(system).toContain("JSON");
-    for (const kind of ["experience", "project", "skill", "highlight"]) {
-      expect(system).toContain(kind);
-    }
+    expect(system).toContain("ResumeDraft");
+    expect(system).toContain("projectMeta");
+    expect(system).toContain("skills");
   });
 
   it("user message contains the activity title and url", () => {
@@ -50,6 +49,28 @@ describe("buildResumePrompt", () => {
     });
     expect(user).toContain(sample.url);
     expect(user).not.toContain("(2024)");
+  });
+
+  it("surfaces repo, language, stars and diff metrics in the activity line", () => {
+    const { user } = buildResumePrompt({
+      name: "",
+      activities: [
+        {
+          ...sample,
+          metrics: JSON.stringify({
+            repo: "acme/repo",
+            language: "Go",
+            stars: 42,
+            additions: 120,
+            deletions: 8,
+          }),
+        },
+      ],
+    });
+    expect(user).toContain("repo=acme/repo");
+    expect(user).toContain("lang=Go");
+    expect(user).toContain("stars=42");
+    expect(user).toContain("diff=+120/-8");
   });
 
   it("handles an empty activity list without throwing", () => {

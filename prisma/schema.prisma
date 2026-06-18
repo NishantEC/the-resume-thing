@@ -81,6 +81,7 @@ model Connection {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   provider   String // "github" | "linear" | "asana" | "jira"
   externalId String? // provider account id / login
+  handle     String? // github login (@handle)
   scopes     String? // space-delimited granted scopes
   lastSyncAt DateTime?
   createdAt  DateTime @default(now())
@@ -119,6 +120,7 @@ model Resume {
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   headline  String?
   summary   String?
+  skills    String?      // JSON text: [{ label, list }]
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   items     ResumeItem[]
@@ -131,8 +133,12 @@ model ResumeItem {
   resume    Resume     @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   kind      String // "experience" | "project" | "skill" | "highlight"
   content   String
+  project     String?   // group label, e.g. "Postcard"
+  projectMeta String?   // e.g. "Maintainer · 4.2k★ · TypeScript, Go"
+  projectUrl  String?   // repo url for the group
   order     Int        @default(0)
   status    String     @default("draft") // "draft" | "accepted"
+  regenerated Boolean   @default(false)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   evidence  Activity[] @relation("ResumeItemEvidence")

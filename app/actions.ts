@@ -3,15 +3,27 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { syncGithub, type SyncResult } from "@/lib/github/ingest";
 import { synthesizeResume } from "@/lib/synthesis/synthesize";
+import { regenerateItem } from "@/lib/synthesis/regenerate";
 
-export async function syncGithubAction(): Promise<SyncResult> {
+async function requireUserId(): Promise<string> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not authenticated");
+  return session.user.id;
+}
 
-  const result = await syncGithub(session.user.id);
-  revalidatePath("/dashboard");
+function revalidateReview(): void {
+  revalidatePath("/review");
+  revalidatePath("/resume");
+}
+
+export async function syncGithubAction(): Promise<SyncResult> {
+  const userId = await requireUserId();
+  const result = await syncGithub(userId);
+  revalidatePath("/activity");
+  revalidatePath("/sources");
   return result;
 }
 
@@ -19,11 +31,53 @@ export async function generateResumeAction(): Promise<{
   resumeId: string;
   itemCount: number;
 }> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Not authenticated");
+  const userId = await requireUserId();
+  const result = await synthesizeResume(userId);
+  revalidateReview();
+  return result;
+}
 
-  const result = await synthesizeResume(session.user.id);
-  revalidatePath("/dashboard");
-  revalidatePath("/resume");
+export async function acceptItemAction(id: string): Promise<void> {
+  const userId = await requireUserId();
+  await prisma.resumeItem.updateMany({
+    where: { id, resume: { userId } },
+    data: { status: "accepted" },
+  });
+  revalidateReview();
+}
+
+export async function undoItemAction(id: string): Promise<void> {
+  const userId = await requireUserId();
+  await prisma.resumeItem.updateMany({
+    where: { id, resume: { userId } },
+    data: { status: "draft" },
+  });
+  revalidateReview();
+}
+
+export async function acceptAllAction(): Promise<void> {
+  const userId = await requireUserId();
+  await prisma.resumeItem.updateMany({
+    where: { resume: { userId } },
+    data: { status: "accepted" },
+  });
+  revalidateReview();
+}
+
+export async function editItemAction(id: string, content: string): Promise<void> {
+  const userId = await requireUserId();
+  const text = content.trim();
+  if (!text) throw new Error("Bullet cannot be empty");
+  await prisma.resumeItem.updateMany({
+    where: { id, resume: { userId } },
+    data: { content: text },
+  });
+  revalidateReview();
+}
+
+export async function regenerateItemAction(id: string): Promise<{ content: string }> {
+  const userId = await requireUserId();
+  const result = await regenerateItem(id, userId);
+  revalidateReview();
   return result;
 }

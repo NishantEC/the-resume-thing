@@ -35,13 +35,22 @@ export async function synthesizeResume(
   const { system, user } = buildResumePrompt({ name: "", activities });
   const draft = await llm.draftResume(system, user);
   console.log(
-    `[synthesis] draft: headline=${JSON.stringify(draft.headline)} items=${draft.items.length}`,
+    `[synthesis] draft: ${draft.items.length} items, ${draft.skills.length} skill groups`,
   );
 
   const resume = await prisma.resume.upsert({
     where: { userId },
-    create: { userId, headline: draft.headline, summary: draft.summary },
-    update: { headline: draft.headline, summary: draft.summary },
+    create: {
+      userId,
+      headline: draft.headline,
+      summary: draft.summary,
+      skills: JSON.stringify(draft.skills),
+    },
+    update: {
+      headline: draft.headline,
+      summary: draft.summary,
+      skills: JSON.stringify(draft.skills),
+    },
     select: { id: true },
   });
 
@@ -61,8 +70,11 @@ export async function synthesizeResume(
     await prisma.resumeItem.create({
       data: {
         resumeId: resume.id,
-        kind: item.kind,
+        kind: "work",
         content: item.content,
+        project: item.project,
+        projectMeta: item.projectMeta,
+        projectUrl: item.projectUrl,
         order: i,
         status: "draft",
         evidence: { connect: evidence.map((e) => ({ id: e.id })) },
