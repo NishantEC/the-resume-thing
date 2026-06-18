@@ -7,130 +7,112 @@ import {
   Text,
   View,
 } from "@react-pdf/renderer";
-import {
-  groupItemsByKind,
-  type Kind,
-  type ResumeView,
-} from "@/lib/resume/load";
-
-const SECTIONS: { kind: Kind; label: string }[] = [
-  { kind: "experience", label: "Experience" },
-  { kind: "project", label: "Projects" },
-  { kind: "skill", label: "Skills" },
-  { kind: "highlight", label: "Highlights" },
-];
+import type { ResumeView } from "@/lib/resume/load";
 
 const styles = StyleSheet.create({
   page: {
-    backgroundColor: "#ffffff",
-    color: "#111111",
+    paddingVertical: 48,
+    paddingHorizontal: 56,
     fontSize: 10,
-    lineHeight: 1.4,
-    paddingHorizontal: 48,
-    paddingVertical: 40,
+    color: "#333333",
+    fontFamily: "Helvetica",
+    lineHeight: 1.5,
   },
-  name: {
-    fontSize: 20,
-    fontWeight: 700,
-  },
-  headline: {
-    color: "#555555",
-    fontSize: 12,
-    marginTop: 2,
-  },
-  summary: {
-    fontSize: 10,
-    marginTop: 12,
-  },
-  section: {
-    marginTop: 18,
-  },
+  name: { fontSize: 20, fontFamily: "Helvetica-Bold", color: "#141414" },
+  headline: { fontSize: 11, color: "#5a5a5a", marginTop: 3 },
+  contact: { fontSize: 8.5, color: "#9a9a9a", marginTop: 4 },
+  rule: { borderBottomWidth: 1, borderBottomColor: "#e5e5e5", marginTop: 14 },
+  summary: { fontSize: 10, color: "#333333", marginTop: 16, lineHeight: 1.55 },
+  section: { marginTop: 20 },
   sectionTitle: {
-    borderBottomColor: "#dddddd",
-    borderBottomWidth: 1,
-    fontSize: 11,
-    fontWeight: 700,
-    letterSpacing: 0.5,
-    marginBottom: 6,
-    paddingBottom: 2,
+    fontSize: 8.5,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 1,
+    color: "#9a9a9a",
     textTransform: "uppercase",
+    marginBottom: 8,
   },
-  itemRow: {
-    flexDirection: "row",
-    marginBottom: 4,
-  },
-  bullet: {
-    width: 12,
-  },
-  itemBody: {
-    flex: 1,
-  },
-  itemContent: {
-    fontSize: 10,
-  },
-  evidence: {
-    color: "#777777",
+  skillRow: { flexDirection: "row", marginBottom: 5 },
+  skillLabel: { width: 96, fontSize: 9.5, fontFamily: "Helvetica-Bold", color: "#404040" },
+  skillList: { flex: 1, fontSize: 9.5, color: "#555555" },
+  group: { marginBottom: 12 },
+  groupHead: { flexDirection: "row", justifyContent: "space-between", marginBottom: 5 },
+  project: { fontSize: 10.5, fontFamily: "Helvetica-Bold", color: "#1c1c1c" },
+  meta: { fontSize: 8.5, color: "#a0a0a0" },
+  itemRow: { flexDirection: "row", marginBottom: 4 },
+  dash: { width: 10, color: "#c0c0c0" },
+  itemContent: { flex: 1, fontSize: 9.5, color: "#333333", lineHeight: 1.5 },
+  source: { fontSize: 7.5, color: "#a0a0a0", textDecoration: "none" },
+  footer: {
+    marginTop: 28,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#eeeeee",
     fontSize: 8,
-    marginTop: 1,
-  },
-  evidenceLink: {
-    color: "#777777",
-    textDecoration: "none",
+    color: "#b0b0b0",
   },
 });
 
 export function ResumeDocument({
   view,
   name,
+  contact,
 }: {
   view: ResumeView;
   name: string;
+  contact?: string;
 }): ReactElement {
-  const grouped = groupItemsByKind(view.items);
-
   return (
-    <Document title={`${name} — Resume`} author={name}>
+    <Document>
       <Page size="A4" style={styles.page}>
-        <View>
-          <Text style={styles.name}>{name}</Text>
-          {view.headline ? (
-            <Text style={styles.headline}>{view.headline}</Text>
-          ) : null}
-        </View>
+        <Text style={styles.name}>{name}</Text>
+        {view.headline ? <Text style={styles.headline}>{view.headline}</Text> : null}
+        {contact ? <Text style={styles.contact}>{contact}</Text> : null}
+        <View style={styles.rule} />
+        {view.summary ? <Text style={styles.summary}>{view.summary}</Text> : null}
 
-        {view.summary ? (
-          <Text style={styles.summary}>{view.summary}</Text>
+        {view.skills.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Skills</Text>
+            {view.skills.map((s) => (
+              <View style={styles.skillRow} key={s.label}>
+                <Text style={styles.skillLabel}>{s.label}</Text>
+                <Text style={styles.skillList}>{s.list}</Text>
+              </View>
+            ))}
+          </View>
         ) : null}
 
-        {SECTIONS.map(({ kind, label }) => {
-          const items = grouped[kind];
-          if (items.length === 0) return null;
-          return (
-            <View key={kind} style={styles.section}>
-              <Text style={styles.sectionTitle}>{label}</Text>
-              {items.map((item) => (
-                <View key={item.id} style={styles.itemRow} wrap={false}>
-                  <Text style={styles.bullet}>•</Text>
-                  <View style={styles.itemBody}>
-                    <Text style={styles.itemContent}>{item.content}</Text>
-                    {item.evidence.length > 0 ? (
-                      <Text style={styles.evidence}>
-                        {item.evidence.map((e, i) => (
-                          <Text key={`${e.url}-${i}`}>
-                            {i > 0 ? "  ·  " : ""}
-                            <Link src={e.url} style={styles.evidenceLink}>
-                              {e.title || e.url}
-                            </Link>
-                          </Text>
-                        ))}
-                      </Text>
-                    ) : null}
-                  </View>
+        {view.groups.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Selected Work</Text>
+            {view.groups.map((g) => (
+              <View style={styles.group} key={g.project}>
+                <View style={styles.groupHead}>
+                  <Text style={styles.project}>{g.project}</Text>
+                  {g.meta ? <Text style={styles.meta}>{g.meta}</Text> : null}
                 </View>
-              ))}
-            </View>
-          );
-        })}
+                {g.items.map((it) => (
+                  <View style={styles.itemRow} key={it.id}>
+                    <Text style={styles.dash}>{"\u2014"}</Text>
+                    <Text style={styles.itemContent}>
+                      {it.content}
+                      {it.evidence.map((ev, ei) => (
+                        <Link key={`${it.id}-${ei}`} src={ev.url} style={styles.source}>
+                          {` ${ev.sourceLabel}`}
+                        </Link>
+                      ))}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        <Text style={styles.footer}>
+          {"generated by the resume thing \u00b7 every claim links to its source"}
+        </Text>
       </Page>
     </Document>
   );

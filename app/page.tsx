@@ -1,52 +1,43 @@
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { SignInButton } from "@/components/auth/sign-in-button";
-import { SignOutButton } from "@/components/auth/sign-out-button";
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
 
 export default async function Home(): Promise<React.ReactElement> {
   const session = await auth.api.getSession({ headers: await headers() });
+  if (session) redirect("/sources");
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-2xl flex-col justify-center gap-8 px-6 py-16">
-      <header className="space-y-3">
-        <p className="font-mono text-sm text-muted-foreground">the resume thing</p>
-        <h1 className="text-balance font-heading text-4xl font-semibold tracking-tight">
-          A resume that keeps itself current.
-        </h1>
-        <p className="text-pretty text-lg text-muted-foreground">
-          Connect the places you actually do the work. We turn your activity into
-          accomplishments — each one linked back to its source.
-        </p>
-      </header>
+    <div className="flex h-screen items-center justify-center bg-[radial-gradient(120%_120%_at_50%_0%,#ffffff_0%,#f6f6f5_100%)] p-8 text-[#262626]">
+      <div className="flex w-full max-w-[452px] flex-col gap-[30px] [animation:screenIn_.5s_ease]">
+        <div className="flex items-center gap-2.5">
+          <span className="flex size-[30px] items-center justify-center rounded-lg bg-[#1c1c1c] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_1px_2px_rgba(0,0,0,0.2)]">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fafafa" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a9 9 0 1 1-3-6.7" />
+              <path d="M21 4v5h-5" />
+            </svg>
+          </span>
+          <span className="font-mono text-[13px] tracking-[0.01em] text-[#8a8a8a]">the resume thing</span>
+        </div>
 
-      {session ? (
-        <section className="flex items-center justify-between rounded-xl border bg-card p-4">
-          <div className="flex flex-col">
-            <span className="font-medium">
-              {session.user.name || session.user.email}
-            </span>
-            <span className="text-sm text-muted-foreground">
-              Signed in with GitHub
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/dashboard" className={buttonVariants({ size: "sm" })}>
-              Open dashboard
-            </Link>
-            <SignOutButton />
-          </div>
-        </section>
-      ) : (
-        <section className="flex flex-col items-start gap-3">
-          <SignInButton />
-          <p className="text-sm text-muted-foreground">
-            We read your public profile, email, and org membership. Nothing is
-            posted on your behalf.
+        <div className="flex flex-col gap-3.5">
+          <h1 className="text-balance text-[38px] font-semibold leading-[1.05] tracking-[-0.03em] text-[#161616]">
+            A resume that keeps itself current.
+          </h1>
+          <p className="text-pretty text-[17px] leading-[1.55] text-[#6b6b6b]">
+            Connect the places you actually do the work. We turn your activity into
+            accomplishments — each one linked back to its source.
           </p>
-        </section>
-      )}
-    </main>
+        </div>
+
+        <div className="flex flex-col items-start gap-3.5">
+          <SignInButton />
+          <p className="max-w-[380px] text-[13px] leading-[1.5] text-[#9a9a9a]">
+            We read your public profile, email, and org membership. Nothing is posted
+            on your behalf.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
