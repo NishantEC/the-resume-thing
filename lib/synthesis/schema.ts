@@ -86,14 +86,3 @@ export const bulletSchema = jsonSchema<{ content: string }>({
   },
   required: ["content"],
 });
-
-export const texSchema = jsonSchema<{ tex: string }>({
-  type: "object",
-  properties: {
-    tex: {
-      type: "string",
-      description: "The complete, valid, compilable LaTeX document (\\documentclass through \\end{document}).",
-    },
-  },
-  required: ["tex"],
-});

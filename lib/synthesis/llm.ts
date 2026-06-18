@@ -1,7 +1,7 @@
 import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
-import { generateObject } from "ai";
-import { bulletSchema, resumeDraftSchema, texSchema, type ResumeDraft } from "./schema";
+import { generateObject, generateText } from "ai";
+import { bulletSchema, resumeDraftSchema, type ResumeDraft } from "./schema";
 
 /**
  * Synthesis seam. Returns validated structured output, so callers/tests can
@@ -84,18 +84,27 @@ export function defaultLlmClient(): LlmClient {
     },
 
     async editLatex(currentTex: string, instruction: string): Promise<string> {
-      const { object } = await generateObject({
+      const { text } = await generateText({
         model,
-        schema: texSchema,
         system: [
           "You are a LaTeX resume editor.",
-          "Apply the user's instruction to the given LaTeX document and return the COMPLETE updated document (\\documentclass through \\end{document}).",
-          "It MUST compile with Tectonic using only standard TeX Live packages — do not add packages needing external fonts, shell-escape, or network. Preserve content the instruction doesn't mention.",
+          "Apply the user's instruction and return the COMPLETE updated LaTeX document, from \\documentclass to \\end{document}.",
+          "Output ONLY raw LaTeX — no markdown code fences, no commentary, no explanation.",
+          "It MUST compile with Tectonic using only standard TeX Live packages — no external fonts, shell-escape, or network. Preserve content the instruction doesn't mention.",
         ].join("\n"),
         prompt: `Instruction: ${instruction}\n\nCurrent LaTeX document:\n${currentTex}`,
         maxOutputTokens: MAX_OUTPUT_TOKENS,
       });
-      return object.tex;
+      return extractLatex(text);
     },
   };
+}
+
+/** Pull the LaTeX document out of a model response (handles stray fences/prose). */
+function extractLatex(raw: string): string {
+  const start = raw.indexOf("\\documentclass");
+  const marker = "\\end{document}";
+  const end = raw.lastIndexOf(marker);
+  if (start !== -1 && end !== -1) return raw.slice(start, end + marker.length);
+  return raw.replace(/```(?:latex|tex)?/gi, "").trim();
 }

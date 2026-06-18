@@ -1,7 +1,12 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import CodeMirror from "@uiw/react-codemirror";
+import { StreamLanguage } from "@codemirror/language";
+import { stex } from "@codemirror/legacy-modes/mode/stex";
+import { keymap } from "@codemirror/view";
+import { indentWithTab } from "@codemirror/commands";
 import {
   aiEditLatexAction,
   resetLatexAction,
@@ -19,7 +24,6 @@ export function LatexEditor({ initialTex }: { initialTex: string }): React.React
   const [compiling, startCompile] = useTransition();
   const [aiPending, startAi] = useTransition();
   const [resetting, startReset] = useTransition();
-  const taRef = useRef<HTMLTextAreaElement>(null);
 
   const busy = compiling || aiPending || resetting;
 
@@ -65,23 +69,26 @@ export function LatexEditor({ initialTex }: { initialTex: string }): React.React
     });
   };
 
-  const onTexKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === "s") {
-      e.preventDefault();
-      compile();
-      return;
-    }
-    if (e.key === "Tab") {
-      e.preventDefault();
-      const el = e.currentTarget;
-      const { selectionStart: s, selectionEnd: en } = el;
-      const next = `${tex.slice(0, s)}  ${tex.slice(en)}`;
-      setTex(next);
-      requestAnimationFrame(() => {
-        el.selectionStart = el.selectionEnd = s + 2;
-      });
-    }
-  };
+  // Keep the CodeMirror keymap stable while always calling the latest compile().
+  const compileRef = useRef(compile);
+  compileRef.current = compile;
+  const extensions = useMemo(
+    () => [
+      StreamLanguage.define(stex),
+      keymap.of([
+        indentWithTab,
+        {
+          key: "Mod-s",
+          preventDefault: true,
+          run: () => {
+            compileRef.current();
+            return true;
+          },
+        },
+      ]),
+    ],
+    [],
+  );
 
   return (
     <div className="flex h-screen flex-col">
@@ -119,14 +126,16 @@ export function LatexEditor({ initialTex }: { initialTex: string }): React.React
 
       <div className="flex min-h-0 flex-1">
         <div className="flex w-1/2 min-w-0 flex-col border-r border-[rgba(0,0,0,0.08)]">
-          <textarea
-            ref={taRef}
-            value={tex}
-            spellCheck={false}
-            onChange={(e) => setTex(e.target.value)}
-            onKeyDown={onTexKeyDown}
-            className="min-h-0 flex-1 resize-none bg-[#fbfbfa] p-4 font-mono text-[12.5px] leading-[1.55] text-[#1c1c1c] outline-none"
-          />
+          <div className="min-h-0 flex-1 overflow-auto">
+            <CodeMirror
+              value={tex}
+              onChange={(v) => setTex(v)}
+              extensions={extensions}
+              height="100%"
+              style={{ height: "100%", fontSize: "13px" }}
+              basicSetup={{ lineNumbers: true, foldGutter: false, highlightActiveLine: true }}
+            />
+          </div>
           {log && (
             <pre className="max-h-[140px] flex-none overflow-auto border-t border-[rgba(0,0,0,0.08)] bg-[#fff5f5] p-3 font-mono text-[11px] whitespace-pre-wrap text-[#b42318]">
               {log}
