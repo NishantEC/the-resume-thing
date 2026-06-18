@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { renderResumePdf } from "@/lib/pdf/render";
+import { renderResumeTex } from "./template";
+import { compileLatex } from "./compile";
 import type { ResumeView } from "@/lib/resume/load";
 
 const view: ResumeView = {
   headline: "Platform Engineer · Developer Tooling",
-  summary: "Builds reliable developer tools.",
+  summary: "Ships reliable Go & TypeScript services — 100% in the open.",
   skills: [
     { label: "Languages", list: "Go, TypeScript, Rust" },
-    { label: "Focus", list: "Observability, API design" },
+    { label: "Focus", list: "Observability, API design, CI/CD" },
   ],
   groups: [
     {
@@ -17,7 +18,7 @@ const view: ResumeView = {
       items: [
         {
           id: "1",
-          content: "Shipped a streaming edge renderer, cutting p99 latency 62%.",
+          content: "Cut p99 render latency 62% with a streaming edge renderer.",
           accepted: true,
           regenerated: false,
           evidence: [
@@ -43,18 +44,13 @@ const view: ResumeView = {
   pct: 100,
 };
 
-describe("renderResumePdf", () => {
-  it("renders a non-trivial, well-formed PDF", async () => {
-    const pdf = await renderResumePdf(view, "Ada Lovelace", "github.com/ada");
-    expect(pdf.subarray(0, 5).toString("latin1")).toBe("%PDF-");
-    expect(pdf.length).toBeGreaterThan(1000);
-  }, 30_000);
-
-  it("renders even when the resume is empty", async () => {
-    const pdf = await renderResumePdf(
-      { headline: null, summary: null, skills: [], groups: [], acceptedCount: 0, totalItems: 0, pct: 0 },
-      "Nobody",
-    );
-    expect(pdf.subarray(0, 5).toString("latin1")).toBe("%PDF-");
-  }, 30_000);
+describe("latex compile (run-once)", () => {
+  it("compiles modern + classic to valid PDFs via tectonic", async () => {
+    for (const template of ["modern", "classic"] as const) {
+      const tex = renderResumeTex({ view, name: "Ada & Lovelace", contact: "github.com/ada", template });
+      const pdf = await compileLatex(tex);
+      expect(pdf.subarray(0, 5).toString("latin1")).toBe("%PDF-");
+      expect(pdf.length).toBeGreaterThan(1000);
+    }
+  }, 180_000);
 });
