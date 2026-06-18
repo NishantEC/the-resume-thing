@@ -3,11 +3,14 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { loadActivity } from "@/lib/activity/load";
 import { GenerateButton } from "@/components/app/generate-button";
+import { loadRepos } from "@/lib/repos";
+import { RepoManager } from "@/components/app/repo-manager";
 
 export default async function ActivityPage(): Promise<React.ReactElement> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session!.user.id;
   const { total, stats, recent } = await loadActivity(userId);
+  const repos = await loadRepos(userId);
 
   return (
     <div className="mx-auto max-w-[740px] animate-[screenIn_.4s_ease] px-[44px] pb-20 pt-12">
@@ -74,6 +77,8 @@ export default async function ActivityPage(): Promise<React.ReactElement> {
               </a>
             ))}
           </div>
+
+          <RepoManager repos={repos} />
 
           <div className="flex items-center justify-between gap-[16px] rounded-[14px] border border-black/[0.08] bg-[linear-gradient(180deg,#fff,#fbfbfb)] px-[20px] py-[16px]">
             <div className="flex flex-col gap-[2px]">

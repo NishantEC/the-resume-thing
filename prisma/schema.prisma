@@ -29,6 +29,7 @@ model User {
   connections Connection[]
   activities  Activity[]
   resume      Resume?
+  ignoredRepos IgnoredRepo[]
 }
 
 model Session {
@@ -142,4 +143,15 @@ model ResumeItem {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   evidence  Activity[] @relation("ResumeItemEvidence")
+}
+
+/// A repository the user has chosen to exclude from synthesis + activity views.
+model IgnoredRepo {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repo      String // "owner/name"
+  createdAt DateTime @default(now())
+
+  @@unique([userId, repo])
 }

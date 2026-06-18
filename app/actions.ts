@@ -81,3 +81,21 @@ export async function regenerateItemAction(id: string): Promise<{ content: strin
   revalidateReview();
   return result;
 }
+
+export async function toggleIgnoreRepoAction(
+  repo: string,
+  ignored: boolean,
+): Promise<void> {
+  const userId = await requireUserId();
+  if (ignored) {
+    await prisma.ignoredRepo.upsert({
+      where: { userId_repo: { userId, repo } },
+      create: { userId, repo },
+      update: {},
+    });
+  } else {
+    await prisma.ignoredRepo.deleteMany({ where: { userId, repo } });
+  }
+  revalidatePath("/activity");
+  revalidateReview();
+}

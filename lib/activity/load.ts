@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { filterIgnored, ignoredRepoSet } from "@/lib/repos";
 
 export type ActivityStat = { n: string; label: string };
 export type RecentItem = {
@@ -46,27 +47,25 @@ function repoOf(title: string, metrics: string | null): string {
 }
 
 export async function loadActivity(userId: string): Promise<ActivityView> {
-  const [byType, repos, recent, connection, total] = await Promise.all([
-    prisma.activity.groupBy({ by: ["type"], where: { userId }, _count: { _all: true } }),
-    prisma.activity.findMany({ where: { userId, type: "repo" }, select: { metrics: true } }),
+  const [all, ignored, connection] = await Promise.all([
     prisma.activity.findMany({
       where: { userId },
       orderBy: [{ occurredAt: "desc" }],
-      take: 8,
       select: { id: true, title: true, type: true, url: true, metrics: true },
     }),
+    ignoredRepoSet(userId),
     prisma.connection.findUnique({
       where: { userId_provider: { userId, provider: "github" } },
       select: { lastSyncAt: true },
     }),
-    prisma.activity.count({ where: { userId } }),
   ]);
 
-  const countOf = (type: string): number =>
-    byType.find((b) => b.type === type)?._count._all ?? 0;
+  const kept = filterIgnored(all, ignored);
+  const countOf = (type: string): number => kept.filter((a) => a.type === type).length;
 
   const languages = new Set<string>();
-  for (const r of repos) {
+  for (const r of kept) {
+    if (r.type !== "repo") continue;
     const lang = langOf(r.metrics);
     if (lang) languages.add(lang);
   }
@@ -80,9 +79,9 @@ export async function loadActivity(userId: string): Promise<ActivityView> {
   ];
 
   return {
-    total,
+    total: kept.length,
     stats,
-    recent: recent.map((a) => ({
+    recent: kept.slice(0, 8).map((a) => ({
       id: a.id,
       title: a.title,
       type: TYPE_LABEL[a.type] ?? a.type,
