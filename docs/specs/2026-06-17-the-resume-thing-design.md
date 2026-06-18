@@ -1,4 +1,4 @@
-# Continuous Resume — Design (MVP Slice 1)
+# The Resume Thing — Design (MVP Slice 1)
 
 - **Date:** 2026-06-17
 - **Status:** Building. Direction approved by user ("lets build"). Proof posture deferred (see Open Fork).

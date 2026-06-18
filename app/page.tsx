@@ -11,7 +11,7 @@ export default async function Home(): Promise<React.ReactElement> {
   return (
     <main className="mx-auto flex min-h-svh max-w-2xl flex-col justify-center gap-8 px-6 py-16">
       <header className="space-y-3">
-        <p className="font-mono text-sm text-muted-foreground">continuous resume</p>
+        <p className="font-mono text-sm text-muted-foreground">the resume thing</p>
         <h1 className="text-balance font-heading text-4xl font-semibold tracking-tight">
           A resume that keeps itself current.
         </h1>
