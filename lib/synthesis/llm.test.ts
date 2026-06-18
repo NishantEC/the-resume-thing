@@ -5,7 +5,7 @@ describe("resolveModelId", () => {
   it("defaults to google + gemini when nothing is set", () => {
     expect(resolveModelId(undefined, undefined)).toEqual({
       provider: "google",
-      modelId: "gemini-2.0-flash",
+      modelId: "gemini-3.5-flash",
     });
   });
 
@@ -13,7 +13,7 @@ describe("resolveModelId", () => {
     // The bug that produced .../models/:generateContent (404).
     expect(resolveModelId("google", "")).toEqual({
       provider: "google",
-      modelId: "gemini-2.0-flash",
+      modelId: "gemini-3.5-flash",
     });
     expect(resolveModelId("openai", "")).toEqual({
       provider: "openai",
@@ -24,7 +24,7 @@ describe("resolveModelId", () => {
   it("treats empty LLM_PROVIDER as google", () => {
     expect(resolveModelId("", "")).toEqual({
       provider: "google",
-      modelId: "gemini-2.0-flash",
+      modelId: "gemini-3.5-flash",
     });
   });
 

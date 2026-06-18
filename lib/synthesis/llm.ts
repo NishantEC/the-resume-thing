@@ -13,7 +13,7 @@ export interface LlmClient {
 const MAX_OUTPUT_TOKENS = 2000;
 
 const DEFAULT_MODELS = {
-  google: "gemini-2.0-flash",
+  google: "gemini-3.5-flash",
   openai: "gpt-4o-mini",
 } as const;
 
