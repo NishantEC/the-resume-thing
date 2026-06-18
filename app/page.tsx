@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/app/theme-toggle";
 
 export default async function Home(): Promise<React.ReactElement> {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (session) redirect("/sources");
+  if (session) redirect("/home");
 
   return (
     <div className="relative flex h-screen items-center justify-center bg-background p-8 text-foreground">

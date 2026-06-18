@@ -8,12 +8,6 @@ import { ThemeToggle } from "@/components/app/theme-toggle";
 export type SidebarData = {
   name: string;
   handle: string | null;
-  connected: boolean;
-  synced: boolean;
-  activityCount: number;
-  synthesized: boolean;
-  acceptedCount: number;
-  totalItems: number;
 };
 
 function initials(name: string): string {
@@ -32,7 +26,7 @@ const LogoMark = (
   </span>
 );
 
-type NavItem = { href: string; label: string; icon: React.ReactNode; badge?: React.ReactNode };
+type NavItem = { href: string; label: string; icon: React.ReactNode };
 
 export function Sidebar(props: SidebarData): React.ReactElement {
   const pathname = usePathname();
@@ -40,55 +34,32 @@ export function Sidebar(props: SidebarData): React.ReactElement {
 
   const items: NavItem[] = [
     {
-      href: "/sources",
-      label: "Sources",
+      href: "/home",
+      label: "Home",
       icon: (
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
-          <path d="M9 17H7A5 5 0 0 1 7 7h2" />
-          <path d="M15 7h2a5 5 0 0 1 0 10h-2" />
-          <line x1="8" y1="12" x2="16" y2="12" />
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
         </svg>
       ),
-      badge: props.connected ? (
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      ) : undefined,
-    },
-    {
-      href: "/activity",
-      label: "Activity",
-      icon: (
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-        </svg>
-      ),
-      badge: props.synced ? (
-        <span className="font-mono text-[11px] text-muted-foreground">{props.activityCount}</span>
-      ) : undefined,
-    },
-    {
-      href: "/review",
-      label: "Review",
-      icon: (
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
-          <path d="M9 11l3 3L22 4" />
-          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-        </svg>
-      ),
-      badge: props.synthesized ? (
-        <span className="font-mono text-[11px] text-muted-foreground">
-          {props.acceptedCount}/{props.totalItems}
-        </span>
-      ) : undefined,
     },
     {
       href: "/resume",
-      label: "Resume",
+      label: "Résumé",
       icon: (
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
           <path d="M14 2v6h6" />
+        </svg>
+      ),
+    },
+    {
+      href: "/settings",
+      label: "Settings",
+      icon: (
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
         </svg>
       ),
     },
@@ -112,10 +83,18 @@ export function Sidebar(props: SidebarData): React.ReactElement {
             >
               {item.icon}
               <span className="flex-1">{item.label}</span>
-              {item.badge}
             </Link>
           );
         })}
+        <div className="flex h-[38px] cursor-default items-center gap-2.5 rounded-[9px] border border-transparent px-2.5 text-[13.5px] font-medium text-sidebar-foreground opacity-50">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
+            <polygon points="12 2 2 7 12 12 22 7 12 2" />
+            <polyline points="2 17 12 22 22 17" />
+            <polyline points="2 12 12 17 22 12" />
+          </svg>
+          <span className="flex-1">Projects</span>
+          <span className="rounded bg-sidebar-accent px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">soon</span>
+        </div>
       </nav>
 
       <div className="flex-1" />

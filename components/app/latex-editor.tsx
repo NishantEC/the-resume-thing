@@ -123,8 +123,8 @@ export function LatexEditor({ initialTex }: { initialTex: string }): React.React
       <header className="flex h-12 flex-none items-center justify-between gap-3 border-b border-border bg-card px-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <Link
-            href="/review"
-            title="Back to review"
+            href="/home"
+            title="Back to home"
             className="inline-flex size-8 flex-none items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">

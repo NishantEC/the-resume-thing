@@ -6,6 +6,7 @@ import type { EvidenceChip, ItemView, ResumeView } from "@/lib/resume/load";
 import {
   acceptAllAction,
   acceptItemAction,
+  dismissItemAction,
   editItemAction,
   regenerateItemAction,
   undoItemAction,
@@ -95,6 +96,7 @@ function ItemCard({
   onAccept,
   onUndo,
   onRegen,
+  onDismiss,
   onStartEdit,
   onCancelEdit,
   onSave,
@@ -108,6 +110,7 @@ function ItemCard({
   onAccept: () => void;
   onUndo: () => void;
   onRegen: () => void;
+  onDismiss: () => void;
   onStartEdit: () => void;
   onCancelEdit: () => void;
   onSave: () => void;
@@ -214,6 +217,15 @@ function ItemCard({
                 <>
                   <span className="text-[12.5px] text-muted-foreground">Pending review</span>
                   <div className="flex gap-[5px]">
+                    <button
+                      type="button"
+                      title="Dismiss"
+                      onClick={onDismiss}
+                      disabled={busy}
+                      className="inline-flex h-[31px] cursor-pointer items-center gap-[5px] rounded-[8px] border border-transparent bg-transparent px-[11px] text-[12.5px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+                    >
+                      Dismiss
+                    </button>
                     <button
                       type="button"
                       title="Regenerate"
@@ -405,6 +417,7 @@ export function ReviewBoard({ resume }: { resume: ResumeView }): React.ReactElem
                 onAccept={() => run(() => acceptItemAction(item.id))}
                 onUndo={() => run(() => undoItemAction(item.id))}
                 onRegen={() => onRegen(item.id)}
+                onDismiss={() => run(() => dismissItemAction(item.id))}
                 onStartEdit={() => startEdit(item)}
                 onCancelEdit={() => setEditingId(null)}
                 onSave={() => onSave(item.id)}

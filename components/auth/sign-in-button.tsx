@@ -14,7 +14,7 @@ export function SignInButton(): React.ReactElement {
         setLoading(true);
         const { error } = await signIn.social({
           provider: "github",
-          callbackURL: "/sources",
+          callbackURL: "/home",
         });
         // On success the browser redirects to GitHub; only reset on failure.
         if (error) setLoading(false);

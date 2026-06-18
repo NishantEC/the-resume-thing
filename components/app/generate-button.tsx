@@ -11,7 +11,7 @@ export function GenerateButton(): React.ReactElement {
   const onGenerate = (): void => {
     startTransition(async () => {
       await generateResumeAction();
-      router.push("/review");
+      router.push("/home");
     });
   };
 

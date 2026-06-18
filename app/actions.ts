@@ -17,16 +17,16 @@ async function requireUserId(): Promise<string> {
   return session.user.id;
 }
 
-function revalidateReview(): void {
-  revalidatePath("/review");
+function revalidateWorkspace(): void {
+  revalidatePath("/home");
   revalidatePath("/resume");
 }
 
 export async function syncGithubAction(): Promise<SyncResult> {
   const userId = await requireUserId();
   const result = await syncGithub(userId);
-  revalidatePath("/activity");
-  revalidatePath("/sources");
+  revalidatePath("/home");
+  revalidatePath("/settings");
   return result;
 }
 
@@ -36,7 +36,7 @@ export async function generateResumeAction(): Promise<{
 }> {
   const userId = await requireUserId();
   const result = await synthesizeResume(userId);
-  revalidateReview();
+  revalidateWorkspace();
   return result;
 }
 
@@ -46,7 +46,7 @@ export async function acceptItemAction(id: string): Promise<void> {
     where: { id, resume: { userId } },
     data: { status: "accepted" },
   });
-  revalidateReview();
+  revalidateWorkspace();
 }
 
 export async function undoItemAction(id: string): Promise<void> {
@@ -55,7 +55,7 @@ export async function undoItemAction(id: string): Promise<void> {
     where: { id, resume: { userId } },
     data: { status: "draft" },
   });
-  revalidateReview();
+  revalidateWorkspace();
 }
 
 export async function acceptAllAction(): Promise<void> {
@@ -64,7 +64,7 @@ export async function acceptAllAction(): Promise<void> {
     where: { resume: { userId } },
     data: { status: "accepted" },
   });
-  revalidateReview();
+  revalidateWorkspace();
 }
 
 export async function editItemAction(id: string, content: string): Promise<void> {
@@ -75,14 +75,23 @@ export async function editItemAction(id: string, content: string): Promise<void>
     where: { id, resume: { userId } },
     data: { content: text },
   });
-  revalidateReview();
+  revalidateWorkspace();
 }
 
 export async function regenerateItemAction(id: string): Promise<{ content: string }> {
   const userId = await requireUserId();
   const result = await regenerateItem(id, userId);
-  revalidateReview();
+  revalidateWorkspace();
   return result;
+}
+
+export async function dismissItemAction(id: string): Promise<void> {
+  const userId = await requireUserId();
+  await prisma.resumeItem.updateMany({
+    where: { id, resume: { userId } },
+    data: { status: "dismissed" },
+  });
+  revalidateWorkspace();
 }
 
 export async function toggleIgnoreRepoAction(
@@ -99,8 +108,8 @@ export async function toggleIgnoreRepoAction(
   } else {
     await prisma.ignoredRepo.deleteMany({ where: { userId, repo } });
   }
-  revalidatePath("/activity");
-  revalidateReview();
+  revalidatePath("/settings");
+  revalidateWorkspace();
 }
 
 export async function toggleIgnoreOrgAction(
@@ -117,8 +126,8 @@ export async function toggleIgnoreOrgAction(
   } else {
     await prisma.ignoredOrg.deleteMany({ where: { userId, org } });
   }
-  revalidatePath("/activity");
-  revalidateReview();
+  revalidatePath("/settings");
+  revalidateWorkspace();
 }
 
 export async function saveLatexAction(

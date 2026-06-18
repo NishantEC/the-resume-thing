@@ -125,7 +125,7 @@ export async function loadResume(userId: string): Promise<ResumeView | null> {
   const resume = await prisma.resume.findUnique({
     where: { userId },
     include: {
-      items: { orderBy: { order: "asc" }, include: { evidence: true } },
+      items: { where: { status: { not: "dismissed" } }, orderBy: { order: "asc" }, include: { evidence: true } },
     },
   });
   if (!resume) return null;

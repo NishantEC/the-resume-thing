@@ -11,7 +11,7 @@ export function SyncButton(): React.ReactElement {
   function handleSync(): void {
     startTransition(async () => {
       await syncGithubAction();
-      router.push("/activity");
+      router.push("/home");
     });
   }
 

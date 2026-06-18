@@ -15,10 +15,10 @@ export default async function ResumePage(): Promise<React.ReactElement> {
         <div className="flex flex-col items-center gap-3.5 rounded-2xl border border-dashed border-border bg-card p-[46px] text-center">
           <span className="text-[15px] text-muted-foreground">No resume generated yet.</span>
           <Link
-            href="/activity"
+            href="/home"
             className="inline-flex h-9 items-center rounded-[9px] border border-border bg-card px-4 text-[13.5px] font-medium text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-accent"
           >
-            Go to activity
+            Go to home
           </Link>
         </div>
       </div>
