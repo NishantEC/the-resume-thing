@@ -1,7 +1,7 @@
 import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
-import { bulletSchema, resumeDraftSchema, type ResumeDraft } from "./schema";
+import { bulletSchema, resumeDraftSchema, texSchema, type ResumeDraft } from "./schema";
 
 /**
  * Synthesis seam. Returns validated structured output, so callers/tests can
@@ -10,6 +10,7 @@ import { bulletSchema, resumeDraftSchema, type ResumeDraft } from "./schema";
 export interface LlmClient {
   draftResume(system: string, user: string): Promise<ResumeDraft>;
   rewriteBullet(system: string, user: string): Promise<string>;
+  editLatex(currentTex: string, instruction: string): Promise<string>;
 }
 
 // Generous budget: thinking models (e.g. Gemini 2.5/3.x flash) spend output
@@ -80,6 +81,21 @@ export function defaultLlmClient(): LlmClient {
         maxOutputTokens: 1024,
       });
       return object.content;
+    },
+
+    async editLatex(currentTex: string, instruction: string): Promise<string> {
+      const { object } = await generateObject({
+        model,
+        schema: texSchema,
+        system: [
+          "You are a LaTeX resume editor.",
+          "Apply the user's instruction to the given LaTeX document and return the COMPLETE updated document (\\documentclass through \\end{document}).",
+          "It MUST compile with Tectonic using only standard TeX Live packages — do not add packages needing external fonts, shell-escape, or network. Preserve content the instruction doesn't mention.",
+        ].join("\n"),
+        prompt: `Instruction: ${instruction}\n\nCurrent LaTeX document:\n${currentTex}`,
+        maxOutputTokens: MAX_OUTPUT_TOKENS,
+      });
+      return object.tex;
     },
   };
 }

@@ -56,19 +56,31 @@ export default async function ResumePage(): Promise<React.ReactElement> {
         <span className="font-mono text-[11.5px] text-[#a8a8a8]">
           resume.pdf · synced {monthYear(connection?.lastSyncAt ?? null)}
         </span>
-        <a
-          href="/api/resume/pdf"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex h-[34px] items-center gap-1.5 rounded-[9px] border border-[rgba(0,0,0,0.12)] bg-white px-3.5 text-[13px] font-semibold text-[#262626] shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-[rgba(0,0,0,0.03)]"
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Download PDF
-        </a>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/resume/edit"
+            className="inline-flex h-[34px] items-center gap-1.5 rounded-[9px] border border-[rgba(0,0,0,0.12)] bg-white px-3.5 text-[13px] font-semibold text-[#262626] shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-[rgba(0,0,0,0.03)]"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
+            Edit LaTeX
+          </Link>
+          <a
+            href="/api/resume/pdf"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex h-[34px] items-center gap-1.5 rounded-[9px] border border-[rgba(0,0,0,0.12)] bg-white px-3.5 text-[13px] font-semibold text-[#262626] shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-[rgba(0,0,0,0.03)]"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download PDF
+          </a>
+        </div>
       </div>
 
       <div className="min-h-[calc(100vh-62px)] bg-[#f3f3f2] px-7 py-10">

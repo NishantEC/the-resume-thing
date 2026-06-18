@@ -123,6 +123,7 @@ model Resume {
   headline  String?
   summary   String?
   skills    String?      // JSON text: [{ label, list }]
+  tex       String?      // user-edited LaTeX source (overrides generated when set)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   items     ResumeItem[]

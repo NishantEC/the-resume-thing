@@ -55,6 +55,7 @@ export async function synthesizeResume(
       headline: draft.headline,
       summary: draft.summary,
       skills: JSON.stringify(draft.skills),
+      tex: null,
     },
     select: { id: true },
   });

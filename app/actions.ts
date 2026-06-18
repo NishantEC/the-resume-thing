@@ -7,6 +7,9 @@ import { prisma } from "@/lib/prisma";
 import { syncGithub, type SyncResult } from "@/lib/github/ingest";
 import { synthesizeResume } from "@/lib/synthesis/synthesize";
 import { regenerateItem } from "@/lib/synthesis/regenerate";
+import { defaultLlmClient } from "@/lib/synthesis/llm";
+import { tryCompileLatex } from "@/lib/latex/compile";
+import { generatedResumeTex } from "@/lib/latex/resume-tex";
 
 async function requireUserId(): Promise<string> {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -116,4 +119,43 @@ export async function toggleIgnoreOrgAction(
   }
   revalidatePath("/activity");
   revalidateReview();
+}
+
+export async function saveLatexAction(
+  tex: string,
+): Promise<{ ok: boolean; log?: string }> {
+  const userId = await requireUserId();
+  const result = await tryCompileLatex(tex);
+  if (!result.ok) return { ok: false, log: result.log };
+  await prisma.resume.updateMany({ where: { userId }, data: { tex } });
+  revalidatePath("/resume");
+  return { ok: true };
+}
+
+export async function resetLatexAction(): Promise<{ ok: true; tex: string | null }> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Not authenticated");
+  await prisma.resume.updateMany({
+    where: { userId: session.user.id },
+    data: { tex: null },
+  });
+  revalidatePath("/resume");
+  const tex = await generatedResumeTex(
+    session.user.id,
+    session.user.name || session.user.email,
+  );
+  return { ok: true, tex };
+}
+
+export async function aiEditLatexAction(
+  instruction: string,
+  currentTex: string,
+): Promise<{ ok: boolean; tex: string; log?: string }> {
+  const userId = await requireUserId();
+  const newTex = await defaultLlmClient().editLatex(currentTex, instruction);
+  const result = await tryCompileLatex(newTex);
+  if (!result.ok) return { ok: false, tex: newTex, log: result.log };
+  await prisma.resume.updateMany({ where: { userId }, data: { tex: newTex } });
+  revalidatePath("/resume");
+  return { ok: true, tex: newTex };
 }
