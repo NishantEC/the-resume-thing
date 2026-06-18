@@ -28,27 +28,27 @@ export default async function SourcesPage(): Promise<React.ReactElement> {
   return (
     <div className="mx-auto max-w-[740px] px-[44px] pb-[80px] pt-[48px]">
       <div className="mb-[34px] flex flex-col gap-[10px]">
-        <span className="font-mono text-[12px] text-[#a0a0a0]">step 1 — connect</span>
-        <h1 className="text-[27px] font-semibold tracking-[-0.02em] text-[#161616]">
+        <span className="font-mono text-[12px] text-muted-foreground">step 1 — connect</span>
+        <h1 className="text-[27px] font-semibold tracking-[-0.02em] text-foreground">
           Connect your work
         </h1>
-        <p className="max-w-[540px] text-[15px] leading-[1.55] text-[#6b6b6b]">
+        <p className="max-w-[540px] text-[15px] leading-[1.55] text-muted-foreground">
           We read what you actually shipped. Connect a source and we ingest the
           evidence — nothing is posted on your behalf.
         </p>
       </div>
 
       {/* GitHub: connected */}
-      <div className="overflow-hidden rounded-[16px] border border-black/[0.08] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <div className="overflow-hidden rounded-[16px] border border-border bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
         <div className="flex items-center gap-[18px] px-6 py-[22px]">
-          <div className="relative flex h-11 w-11 flex-none items-center justify-center rounded-[11px] bg-[#1c1c1c]">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#fafafa">
+          <div className="relative flex h-11 w-11 flex-none items-center justify-center rounded-[11px] bg-primary text-primary-foreground">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
               <path d={GITHUB_PATH} />
             </svg>
           </div>
           <div className="flex flex-1 flex-col gap-1">
             <div className="flex items-center gap-[9px]">
-              <span className="text-[15.5px] font-semibold text-[#1c1c1c]">GitHub</span>
+              <span className="text-[15.5px] font-semibold text-foreground">GitHub</span>
               <span className="inline-flex h-5 items-center gap-1 rounded-[6px] bg-[rgba(16,185,129,0.10)] px-[7px] text-[11.5px] font-semibold text-[#047857]">
                 <svg
                   width="11"
@@ -65,22 +65,22 @@ export default async function SourcesPage(): Promise<React.ReactElement> {
                 Connected
               </span>
             </div>
-            <span className="text-[13.5px] text-[#7a7a7a]">
+            <span className="text-[13.5px] text-muted-foreground">
               Connected as{" "}
-              <span className="font-mono text-[12.5px] text-[#525252]">@{handle}</span>
+              <span className="font-mono text-[12.5px] text-muted-foreground">@{handle}</span>
             </span>
           </div>
           <DisconnectButton />
         </div>
-        <div className="flex flex-wrap items-center gap-[10px] border-t border-black/[0.06] bg-black/[0.012] px-6 py-[14px]">
-          <span className="font-mono text-[11px] text-[#a0a0a0]">scopes</span>
-          <span className="rounded-[6px] border border-black/[0.08] bg-white px-2 py-[3px] font-mono text-[11.5px] text-[#525252]">
+        <div className="flex flex-wrap items-center gap-[10px] border-t border-border bg-accent px-6 py-[14px]">
+          <span className="font-mono text-[11px] text-muted-foreground">scopes</span>
+          <span className="rounded-[6px] border border-border bg-card px-2 py-[3px] font-mono text-[11.5px] text-muted-foreground">
             read:user
           </span>
-          <span className="rounded-[6px] border border-black/[0.08] bg-white px-2 py-[3px] font-mono text-[11.5px] text-[#525252]">
+          <span className="rounded-[6px] border border-border bg-card px-2 py-[3px] font-mono text-[11.5px] text-muted-foreground">
             user:email
           </span>
-          <span className="rounded-[6px] border border-black/[0.08] bg-white px-2 py-[3px] font-mono text-[11.5px] text-[#525252]">
+          <span className="rounded-[6px] border border-border bg-card px-2 py-[3px] font-mono text-[11.5px] text-muted-foreground">
             read:org
           </span>
           <div className="flex-1" />
@@ -93,7 +93,7 @@ export default async function SourcesPage(): Promise<React.ReactElement> {
         {SOON.map((s) => (
           <div
             key={s.name}
-            className="flex flex-col gap-[11px] rounded-[13px] border border-black/[0.07] bg-white p-4 opacity-70"
+            className="flex flex-col gap-[11px] rounded-[13px] border border-border bg-card p-4 opacity-70"
           >
             <div className="flex items-center justify-between">
               <div
@@ -102,11 +102,11 @@ export default async function SourcesPage(): Promise<React.ReactElement> {
               >
                 {s.glyph}
               </div>
-              <span className="font-mono text-[10px] tracking-[0.03em] text-[#a8a8a8]">
+              <span className="font-mono text-[10px] tracking-[0.03em] text-muted-foreground">
                 soon
               </span>
             </div>
-            <span className="text-[13.5px] font-semibold text-[#525252]">{s.name}</span>
+            <span className="text-[13.5px] font-semibold text-muted-foreground">{s.name}</span>
           </div>
         ))}
       </div>

@@ -20,7 +20,7 @@ export function DisconnectButton(): React.ReactElement {
       type="button"
       onClick={handleDisconnect}
       disabled={pending}
-      className="inline-flex h-8 items-center rounded-[8px] border border-transparent bg-transparent px-[11px] text-[13px] font-medium text-[#8a8a8a] hover:bg-black/5 hover:text-[#262626] disabled:opacity-70 disabled:cursor-default"
+      className="inline-flex h-8 items-center rounded-[8px] border border-transparent bg-transparent px-[11px] text-[13px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-70 disabled:cursor-default"
     >
       Disconnect
     </button>

@@ -39,7 +39,7 @@ export default async function AppLayout({
         acceptedCount={acceptedCount}
         totalItems={items.length}
       />
-      <main className="h-screen min-w-0 flex-1 overflow-auto bg-white">
+      <main className="h-screen min-w-0 flex-1 overflow-auto bg-background">
         {children}
       </main>
     </div>

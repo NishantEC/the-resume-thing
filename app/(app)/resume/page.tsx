@@ -12,11 +12,11 @@ export default async function ResumePage(): Promise<React.ReactElement> {
   if (!tex) {
     return (
       <div className="mx-auto flex max-w-[760px] flex-col gap-3.5 px-11 py-12">
-        <div className="flex flex-col items-center gap-3.5 rounded-2xl border border-dashed border-[rgba(0,0,0,0.14)] bg-white p-[46px] text-center">
-          <span className="text-[15px] text-[#6b6b6b]">No resume generated yet.</span>
+        <div className="flex flex-col items-center gap-3.5 rounded-2xl border border-dashed border-border bg-card p-[46px] text-center">
+          <span className="text-[15px] text-muted-foreground">No resume generated yet.</span>
           <Link
             href="/activity"
-            className="inline-flex h-9 items-center rounded-[9px] border border-[rgba(0,0,0,0.12)] bg-white px-4 text-[13.5px] font-medium text-[#262626] shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-[rgba(0,0,0,0.03)]"
+            className="inline-flex h-9 items-center rounded-[9px] border border-border bg-card px-4 text-[13.5px] font-medium text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-accent"
           >
             Go to activity
           </Link>

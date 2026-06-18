@@ -19,18 +19,18 @@ export function OrgManager({ orgs }: { orgs: OrgRow[] }): React.ReactElement | n
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-      <div className="flex items-center justify-between border-b border-[rgba(0,0,0,0.06)] px-[18px] py-[13px]">
-        <span className="text-[13.5px] font-semibold text-[#262626]">Organizations</span>
-        <span className="font-mono text-[11px] text-[#a0a0a0]">ignore a whole org</span>
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <div className="flex items-center justify-between border-b border-border px-[18px] py-[13px]">
+        <span className="text-[13.5px] font-semibold text-foreground">Organizations</span>
+        <span className="font-mono text-[11px] text-muted-foreground">ignore a whole org</span>
       </div>
       {orgs.map((o) => (
         <div
           key={o.org}
-          className="flex items-center gap-3 border-b border-[rgba(0,0,0,0.05)] px-[18px] py-[10px] last:border-b-0"
+          className="flex items-center gap-3 border-b border-border px-[18px] py-[10px] last:border-b-0"
         >
           <span
-            className={`flex-1 truncate font-mono text-[13px] ${o.ignored ? "text-[#b0b0b0] line-through" : "text-[#2a2a2a]"}`}
+            className={`flex-1 truncate font-mono text-[13px] ${o.ignored ? "text-muted-foreground line-through" : "text-foreground"}`}
           >
             {o.org}
           </span>
@@ -40,8 +40,8 @@ export function OrgManager({ orgs }: { orgs: OrgRow[] }): React.ReactElement | n
             onClick={() => toggle(o.org, !o.ignored)}
             className={`flex-none rounded-lg border px-2.5 py-1 text-[12px] font-medium disabled:opacity-50 ${
               o.ignored
-                ? "border-[rgba(0,0,0,0.12)] bg-white text-[#262626] hover:bg-[rgba(0,0,0,0.03)]"
-                : "border-transparent text-[#8a8a8a] hover:bg-[rgba(0,0,0,0.05)] hover:text-[#262626]"
+                ? "border-border bg-card text-foreground hover:bg-accent"
+                : "border-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
             }`}
           >
             {o.ignored ? "Include" : "Ignore"}

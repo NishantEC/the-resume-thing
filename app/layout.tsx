@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const interHeading = Inter({subsets:['latin'],variable:'--font-heading'});
 
@@ -25,9 +26,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-    className={cn("h-full antialiased font-sans", inter.variable, interHeading.variable, geistMono.variable)}
+      suppressHydrationWarning
+      className={cn("h-full antialiased font-sans", inter.variable, interHeading.variable, geistMono.variable)}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

@@ -20,7 +20,7 @@ export function GenerateButton(): React.ReactElement {
       type="button"
       onClick={onGenerate}
       disabled={pending}
-      className="inline-flex h-[38px] cursor-pointer items-center gap-2 rounded-[9px] border border-[#262626] bg-[#262626] px-[17px] text-[13.5px] font-semibold text-[#fafafa] shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_1px_2px_rgba(38,38,38,0.24)] hover:border-[#333] hover:bg-[#333] disabled:cursor-default disabled:opacity-80"
+      className="inline-flex h-[38px] cursor-pointer items-center gap-2 rounded-[9px] border border-primary bg-primary px-[17px] text-[13.5px] font-semibold text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_1px_2px_rgba(38,38,38,0.24)] hover:border-primary hover:bg-primary/90 disabled:cursor-default disabled:opacity-80"
     >
       {pending ? (
         <>
@@ -29,7 +29,7 @@ export function GenerateButton(): React.ReactElement {
             height="15"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#fafafa"
+            stroke="currentColor"
             strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -47,7 +47,7 @@ export function GenerateButton(): React.ReactElement {
             height="15"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#fafafa"
+            stroke="currentColor"
             strokeWidth="2.1"
             strokeLinecap="round"
             strokeLinejoin="round"

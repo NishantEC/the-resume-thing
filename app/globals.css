@@ -247,4 +247,4 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes shimmer { to { background-position: -200% 0; } }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
-::selection { background: rgba(38,38,38,0.12); }
+::selection { background: color-mix(in srgb, var(--foreground) 16%, transparent); }

@@ -65,7 +65,7 @@ function Chip({ ev }: { ev: EvidenceChip }): React.ReactElement {
       href={ev.url}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex h-[25px] items-center gap-[7px] rounded-[7px] border border-black/[0.09] bg-white pr-[9px] pl-1.5 no-underline shadow-[0_1px_1px_rgba(0,0,0,0.02)] hover:border-black/20 hover:bg-black/[0.015]"
+      className="inline-flex h-[25px] items-center gap-[7px] rounded-[7px] border border-border bg-card pr-[9px] pl-1.5 no-underline shadow-[0_1px_1px_rgba(0,0,0,0.02)] hover:border-border hover:bg-accent"
     >
       <span
         className="inline-flex h-[15px] items-center rounded-[4px] px-[5px] font-mono text-[9px] font-semibold tracking-[0.05em]"
@@ -73,14 +73,14 @@ function Chip({ ev }: { ev: EvidenceChip }): React.ReactElement {
       >
         {ev.kind}
       </span>
-      <span className="font-mono text-[11.5px] text-[#404040]">{ev.repoRef}</span>
+      <span className="font-mono text-[11.5px] text-muted-foreground">{ev.repoRef}</span>
       {ev.hasStat ? (
         <>
           <span className="font-mono text-[11px] text-[#16a34a]">{ev.add}</span>
           <span className="font-mono text-[11px] text-[#dc2626]">{ev.del}</span>
         </>
       ) : null}
-      <span className="font-mono text-[11px] text-[#aaa]">{ev.date}</span>
+      <span className="font-mono text-[11px] text-muted-foreground">{ev.date}</span>
     </a>
   );
 }
@@ -113,9 +113,9 @@ function ItemCard({
   onSave: () => void;
 }): React.ReactElement {
   return (
-    <div className="flex overflow-hidden rounded-[14px] border border-black/[0.08] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+    <div className="flex overflow-hidden rounded-[14px] border border-border bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <div
-        className={`w-[3px] flex-none ${item.accepted ? "bg-[#16a34a]" : "bg-black/[0.08]"}`}
+        className={`w-[3px] flex-none ${item.accepted ? "bg-[#16a34a]" : "bg-border"}`}
       />
       <div className="flex min-w-0 flex-1 flex-col gap-[13px] px-[18px] py-4">
         {editing ? (
@@ -123,13 +123,13 @@ function ItemCard({
             <textarea
               value={draft}
               onChange={(e) => onDraftChange(e.target.value)}
-              className="min-h-[74px] w-full resize-y rounded-[10px] border border-black/[0.14] bg-white px-[13px] py-[11px] text-[15px] leading-[1.55] text-[#1c1c1c] outline-none"
+              className="min-h-[74px] w-full resize-y rounded-[10px] border border-border bg-card px-[13px] py-[11px] text-[15px] leading-[1.55] text-foreground outline-none"
             />
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={onCancelEdit}
-                className="inline-flex h-8 cursor-pointer items-center rounded-[8px] border border-transparent bg-transparent px-3 text-[13px] font-medium text-[#8a8a8a] hover:bg-black/[0.05] hover:text-[#262626]"
+                className="inline-flex h-8 cursor-pointer items-center rounded-[8px] border border-transparent bg-transparent px-3 text-[13px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
               >
                 Cancel
               </button>
@@ -137,7 +137,7 @@ function ItemCard({
                 type="button"
                 onClick={onSave}
                 disabled={busy}
-                className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-[8px] border border-[#262626] bg-[#262626] px-[13px] text-[13px] font-semibold text-[#fafafa] shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_1px_2px_rgba(38,38,38,0.24)] hover:bg-[#333]"
+                className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-[8px] border border-primary bg-primary px-[13px] text-[13px] font-semibold text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_1px_2px_rgba(38,38,38,0.24)] hover:bg-primary/90"
               >
                 Save
               </button>
@@ -145,20 +145,20 @@ function ItemCard({
           </div>
         ) : (
           <>
-            <p className="m-0 text-[15px] leading-[1.58] text-[#222]">{item.content}</p>
+            <p className="m-0 text-[15px] leading-[1.58] text-foreground">{item.content}</p>
 
             <div className="flex flex-wrap items-center gap-[7px]">
               {item.evidence.map((ev, i) => (
                 <Chip key={`${ev.url}-${i}`} ev={ev} />
               ))}
               {item.regenerated ? (
-                <span className="inline-flex items-center gap-1 font-mono text-[10.5px] text-[#b0b0b0]">
+                <span className="inline-flex items-center gap-1 font-mono text-[10.5px] text-muted-foreground">
                   <svg
                     width="11"
                     height="11"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke="#b0b0b0"
+                    stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -194,7 +194,7 @@ function ItemCard({
                       type="button"
                       title="Edit"
                       onClick={onStartEdit}
-                      className="inline-flex h-[30px] cursor-pointer items-center gap-[5px] rounded-[8px] border border-transparent bg-transparent px-[11px] text-[12.5px] font-medium text-[#7a7a7a] hover:bg-black/[0.05] hover:text-[#262626]"
+                      className="inline-flex h-[30px] cursor-pointer items-center gap-[5px] rounded-[8px] border border-transparent bg-transparent px-[11px] text-[12.5px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
                     >
                       <EditIcon />
                       Edit
@@ -204,7 +204,7 @@ function ItemCard({
                       title="Undo accept"
                       onClick={onUndo}
                       disabled={busy}
-                      className="inline-flex h-[30px] cursor-pointer items-center rounded-[8px] border border-transparent bg-transparent px-[11px] text-[12.5px] font-medium text-[#7a7a7a] hover:bg-black/[0.05] hover:text-[#262626]"
+                      className="inline-flex h-[30px] cursor-pointer items-center rounded-[8px] border border-transparent bg-transparent px-[11px] text-[12.5px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
                     >
                       Undo
                     </button>
@@ -212,14 +212,14 @@ function ItemCard({
                 </>
               ) : (
                 <>
-                  <span className="text-[12.5px] text-[#a8a8a8]">Pending review</span>
+                  <span className="text-[12.5px] text-muted-foreground">Pending review</span>
                   <div className="flex gap-[5px]">
                     <button
                       type="button"
                       title="Regenerate"
                       onClick={onRegen}
                       disabled={busy}
-                      className="inline-flex h-[31px] cursor-pointer items-center gap-[5px] rounded-[8px] border border-transparent bg-transparent px-[11px] text-[12.5px] font-medium text-[#7a7a7a] hover:bg-black/[0.05] hover:text-[#262626]"
+                      className="inline-flex h-[31px] cursor-pointer items-center gap-[5px] rounded-[8px] border border-transparent bg-transparent px-[11px] text-[12.5px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
                     >
                       {regenerating ? <Spinner /> : <RegenIcon />}
                       Regenerate
@@ -228,7 +228,7 @@ function ItemCard({
                       type="button"
                       title="Edit"
                       onClick={onStartEdit}
-                      className="inline-flex h-[31px] cursor-pointer items-center gap-[5px] rounded-[8px] border border-black/[0.12] bg-white px-[11px] text-[12.5px] font-medium text-[#404040] shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-black/[0.03]"
+                      className="inline-flex h-[31px] cursor-pointer items-center gap-[5px] rounded-[8px] border border-border bg-card px-[11px] text-[12.5px] font-medium text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-accent"
                     >
                       <EditIcon />
                       Edit
@@ -237,14 +237,14 @@ function ItemCard({
                       type="button"
                       onClick={onAccept}
                       disabled={busy}
-                      className="inline-flex h-[31px] cursor-pointer items-center gap-[5px] rounded-[8px] border border-[#262626] bg-[#262626] px-[13px] text-[12.5px] font-semibold text-[#fafafa] shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_1px_2px_rgba(38,38,38,0.24)] hover:bg-[#333]"
+                      className="inline-flex h-[31px] cursor-pointer items-center gap-[5px] rounded-[8px] border border-primary bg-primary px-[13px] text-[12.5px] font-semibold text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_1px_2px_rgba(38,38,38,0.24)] hover:bg-primary/90"
                     >
                       <svg
                         width="13"
                         height="13"
                         viewBox="0 0 24 24"
                         fill="none"
-                        stroke="#fafafa"
+                        stroke="currentColor"
                         strokeWidth="2.6"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -305,14 +305,14 @@ export function ReviewBoard({ resume }: { resume: ResumeView }): React.ReactElem
   return (
     <div>
       {/* progress toolbar */}
-      <div className="sticky top-0 z-[5] mb-[22px] flex items-center gap-4 rounded-[13px] border border-black/[0.08] bg-white/[0.86] px-4 py-[13px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-[8px]">
+      <div className="sticky top-0 z-[5] mb-[22px] flex items-center gap-4 rounded-[13px] border border-border bg-card/[0.86] px-4 py-[13px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-[8px]">
         <div className="flex flex-1 flex-col gap-1.5">
           <div className="flex items-center gap-2">
-            <span className="text-[13.5px] font-semibold text-[#1c1c1c]">
+            <span className="text-[13.5px] font-semibold text-foreground">
               {resume.acceptedCount} of {resume.totalItems} accepted
             </span>
           </div>
-          <div className="h-[5px] overflow-hidden rounded-[3px] bg-black/[0.07]">
+          <div className="h-[5px] overflow-hidden rounded-[3px] bg-accent">
             <div
               className="h-full rounded-[3px] bg-[#16a34a] transition-[width] duration-[350ms] ease-[cubic-bezier(.4,0,.2,1)]"
               style={{ width: `${resume.pct}%` }}
@@ -323,14 +323,14 @@ export function ReviewBoard({ resume }: { resume: ResumeView }): React.ReactElem
           type="button"
           onClick={onAcceptAll}
           disabled={pending}
-          className="inline-flex h-[33px] cursor-pointer items-center gap-1.5 rounded-[8px] border border-black/[0.12] bg-white px-[13px] text-[13px] font-medium text-[#262626] shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-black/[0.03]"
+          className="inline-flex h-[33px] cursor-pointer items-center gap-1.5 rounded-[8px] border border-border bg-card px-[13px] text-[13px] font-medium text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-accent"
         >
           Accept all
         </button>
         <button
           type="button"
           onClick={() => router.push("/resume")}
-          className="inline-flex h-[33px] cursor-pointer items-center gap-[7px] rounded-[8px] border border-[#262626] bg-[#262626] px-[14px] text-[13px] font-semibold text-[#fafafa] shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_1px_2px_rgba(38,38,38,0.24)] hover:border-[#333] hover:bg-[#333]"
+          className="inline-flex h-[33px] cursor-pointer items-center gap-[7px] rounded-[8px] border border-primary bg-primary px-[14px] text-[13px] font-semibold text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_1px_2px_rgba(38,38,38,0.24)] hover:border-primary hover:bg-primary/90"
         >
           View resume
           <svg
@@ -338,7 +338,7 @@ export function ReviewBoard({ resume }: { resume: ResumeView }): React.ReactElem
             height="14"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#fafafa"
+            stroke="currentColor"
             strokeWidth="2.1"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -352,12 +352,12 @@ export function ReviewBoard({ resume }: { resume: ResumeView }): React.ReactElem
       {/* summary card */}
       <div className="mb-[26px]">
         <div className="mb-2.5 flex items-center gap-2">
-          <span className="font-mono text-[11.5px] tracking-[0.04em] text-[#a0a0a0] uppercase">
+          <span className="font-mono text-[11.5px] tracking-[0.04em] text-muted-foreground uppercase">
             Summary
           </span>
-          <div className="h-px flex-1 bg-black/[0.06]" />
+          <div className="h-px flex-1 bg-border" />
         </div>
-        <div className="rounded-[14px] border border-black/[0.08] bg-white px-5 py-[18px] text-[15px] leading-[1.6] text-[#2a2a2a] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="rounded-[14px] border border-border bg-card px-5 py-[18px] text-[15px] leading-[1.6] text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           {resume.summary}
         </div>
       </div>
@@ -366,14 +366,14 @@ export function ReviewBoard({ resume }: { resume: ResumeView }): React.ReactElem
       {resume.groups.map((group, gi) => (
         <div key={`${group.project}-${gi}`} className="mb-7">
           <div className="mb-3 flex items-center gap-2.5">
-            <span className="text-[15px] font-semibold text-[#1c1c1c]">{group.project}</span>
-            <span className="font-mono text-[11.5px] text-[#9a9a9a]">{group.meta}</span>
-            <div className="h-px flex-1 bg-black/[0.06]" />
+            <span className="text-[15px] font-semibold text-foreground">{group.project}</span>
+            <span className="font-mono text-[11.5px] text-muted-foreground">{group.meta}</span>
+            <div className="h-px flex-1 bg-border" />
             <a
               href={group.repoUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 font-mono text-[11.5px] text-[#9a9a9a] no-underline hover:text-[#262626]"
+              className="inline-flex items-center gap-1 font-mono text-[11.5px] text-muted-foreground no-underline hover:text-foreground"
             >
               repo
               <svg

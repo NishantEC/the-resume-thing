@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "@/lib/auth-client";
+import { ThemeToggle } from "@/components/app/theme-toggle";
 
 export type SidebarData = {
   name: string;
@@ -23,8 +24,8 @@ function initials(name: string): string {
 }
 
 const LogoMark = (
-  <span className="flex size-7 items-center justify-center rounded-lg bg-[#1c1c1c] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_1px_2px_rgba(0,0,0,0.2)]">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fafafa" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+  <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_1px_2px_rgba(0,0,0,0.2)]">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 12a9 9 0 1 1-3-6.7" />
       <path d="M21 4v5h-5" />
     </svg>
@@ -63,7 +64,7 @@ export function Sidebar(props: SidebarData): React.ReactElement {
         </svg>
       ),
       badge: props.synced ? (
-        <span className="font-mono text-[11px] text-[#9a9a9a]">{props.activityCount}</span>
+        <span className="font-mono text-[11px] text-muted-foreground">{props.activityCount}</span>
       ) : undefined,
     },
     {
@@ -76,7 +77,7 @@ export function Sidebar(props: SidebarData): React.ReactElement {
         </svg>
       ),
       badge: props.synthesized ? (
-        <span className="font-mono text-[11px] text-[#9a9a9a]">
+        <span className="font-mono text-[11px] text-muted-foreground">
           {props.acceptedCount}/{props.totalItems}
         </span>
       ) : undefined,
@@ -94,10 +95,10 @@ export function Sidebar(props: SidebarData): React.ReactElement {
   ];
 
   return (
-    <aside className="flex h-screen w-[252px] flex-none flex-col border-r border-[rgba(0,0,0,0.08)] bg-[#fafafa] px-[14px] py-[18px]">
+    <aside className="flex h-screen w-[252px] flex-none flex-col border-r border-sidebar-border bg-sidebar px-[14px] py-[18px]">
       <div className="flex items-center gap-[9px] px-2 pt-[6px] pb-[18px]">
         {LogoMark}
-        <span className="font-mono text-[12.5px] text-[#7a7a7a]">the resume thing</span>
+        <span className="font-mono text-[12.5px] text-muted-foreground">the resume thing</span>
       </div>
 
       <nav className="flex flex-col gap-0.5">
@@ -107,7 +108,7 @@ export function Sidebar(props: SidebarData): React.ReactElement {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex h-[38px] items-center gap-2.5 rounded-[9px] border border-transparent px-2.5 text-[13.5px] font-medium text-[#3a3a3a] hover:bg-[rgba(0,0,0,0.045)] ${active ? "bg-[rgba(0,0,0,0.055)]" : "bg-transparent"}`}
+              className={`flex h-[38px] items-center gap-2.5 rounded-[9px] border border-transparent px-2.5 text-[13.5px] font-medium text-sidebar-foreground hover:bg-sidebar-accent ${active ? "bg-sidebar-accent" : "bg-transparent"}`}
             >
               {item.icon}
               <span className="flex-1">{item.label}</span>
@@ -119,16 +120,17 @@ export function Sidebar(props: SidebarData): React.ReactElement {
 
       <div className="flex-1" />
 
-      <div className="flex items-center gap-2.5 rounded-[11px] border border-[rgba(0,0,0,0.07)] bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-        <div className="flex size-8 flex-none items-center justify-center rounded-lg bg-[#262626] text-[12px] font-semibold tracking-[0.02em] text-[#fafafa]">
+      <div className="flex items-center gap-2.5 rounded-[11px] border border-border bg-card p-2 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+        <div className="flex size-8 flex-none items-center justify-center rounded-lg bg-primary text-[12px] font-semibold tracking-[0.02em] text-primary-foreground">
           {initials(props.name)}
         </div>
         <div className="flex min-w-0 flex-1 flex-col leading-[1.25]">
-          <span className="truncate text-[13px] font-semibold text-[#262626]">{props.name}</span>
-          <span className="font-mono text-[11px] text-[#9a9a9a]">
+          <span className="truncate text-[13px] font-semibold text-foreground">{props.name}</span>
+          <span className="font-mono text-[11px] text-muted-foreground">
             {props.handle ? `@${props.handle}` : "connected"}
           </span>
         </div>
+        <ThemeToggle className="flex size-[30px] flex-none items-center justify-center rounded-[7px] border border-transparent text-muted-foreground hover:bg-accent hover:text-foreground" />
         <button
           type="button"
           title="Sign out"
@@ -137,7 +139,7 @@ export function Sidebar(props: SidebarData): React.ReactElement {
             router.push("/");
             router.refresh();
           }}
-          className="flex size-[30px] flex-none items-center justify-center rounded-[7px] border border-transparent text-[#9a9a9a] hover:bg-[rgba(0,0,0,0.05)] hover:text-[#262626]"
+          className="flex size-[30px] flex-none items-center justify-center rounded-[7px] border border-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
