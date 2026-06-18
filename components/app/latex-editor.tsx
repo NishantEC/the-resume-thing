@@ -5,7 +5,7 @@ import Link from "next/link";
 import CodeMirror from "@uiw/react-codemirror";
 import { StreamLanguage } from "@codemirror/language";
 import { stex } from "@codemirror/legacy-modes/mode/stex";
-import { keymap } from "@codemirror/view";
+import { EditorView, keymap } from "@codemirror/view";
 import { indentWithTab } from "@codemirror/commands";
 import {
   aiEditLatexAction,
@@ -14,6 +14,9 @@ import {
 } from "@/app/actions";
 
 type ChatMsg = { role: "user" | "assistant"; text: string };
+type Heading = { title: string; line: number };
+
+const SECTION_RE = /\\(?:sub)?section\*?\{([^}]*)\}/;
 
 export function LatexEditor({ initialTex }: { initialTex: string }): React.ReactElement {
   const [tex, setTex] = useState(initialTex);
@@ -21,9 +24,11 @@ export function LatexEditor({ initialTex }: { initialTex: string }): React.React
   const [log, setLog] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [aiInput, setAiInput] = useState("");
+  const [aiOpen, setAiOpen] = useState(true);
   const [compiling, startCompile] = useTransition();
   const [aiPending, startAi] = useTransition();
   const [resetting, startReset] = useTransition();
+  const viewRef = useRef<EditorView | null>(null);
 
   const busy = compiling || aiPending || resetting;
 
@@ -63,11 +68,32 @@ export function LatexEditor({ initialTex }: { initialTex: string }): React.React
         setLog(r.log ?? null);
         setMessages((m) => [
           ...m,
-          { role: "assistant", text: "Edited the source, but it didn't compile — see the log, tweak, and Compile." },
+          { role: "assistant", text: "Edited the source, but it didn't compile — see the log, tweak, and Recompile." },
         ]);
       }
     });
   };
+
+  const goTo = (line: number) => {
+    const view = viewRef.current;
+    if (!view) return;
+    const target = view.state.doc.line(Math.min(line, view.state.doc.lines));
+    view.dispatch({
+      selection: { anchor: target.from },
+      effects: EditorView.scrollIntoView(target.from, { y: "start" }),
+    });
+    view.focus();
+  };
+
+  const outline = useMemo<Heading[]>(() => {
+    const out: Heading[] = [];
+    const lines = tex.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(SECTION_RE);
+      if (m) out.push({ title: m[1], line: i + 1 });
+    }
+    return out;
+  }, [tex]);
 
   // Keep the CodeMirror keymap stable while always calling the latest compile().
   const compileRef = useRef(compile);
@@ -91,25 +117,35 @@ export function LatexEditor({ initialTex }: { initialTex: string }): React.React
   );
 
   return (
-    <div className="flex h-screen flex-col">
-      <div className="flex flex-none items-center justify-between gap-3 border-b border-[rgba(0,0,0,0.08)] bg-white px-5 py-3">
-        <Link
-          href="/resume"
-          className="inline-flex h-[33px] items-center gap-1.5 rounded-lg border border-transparent px-3 text-[13px] font-medium text-[#525252] hover:bg-[rgba(0,0,0,0.05)] hover:text-[#262626]"
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12" />
-            <polyline points="12 19 5 12 12 5" />
-          </svg>
-          Resume
-        </Link>
-        <span className="font-mono text-[11.5px] text-[#a8a8a8]">resume.tex</span>
-        <div className="flex items-center gap-2">
+    <div className="fixed inset-0 z-40 flex flex-col bg-white text-[#1f1f1f]">
+      {/* Top bar */}
+      <header className="flex h-12 flex-none items-center justify-between gap-3 border-b border-[rgba(0,0,0,0.1)] bg-[#fbfbfa] px-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Link
+            href="/review"
+            title="Back to review"
+            className="inline-flex size-8 flex-none items-center justify-center rounded-md text-[#525252] hover:bg-[rgba(0,0,0,0.06)] hover:text-[#1f1f1f]"
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+          </Link>
+          <span className="flex size-6 flex-none items-center justify-center rounded-md bg-[#1c1c1c]">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fafafa" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a9 9 0 1 1-3-6.7" />
+              <path d="M21 4v5h-5" />
+            </svg>
+          </span>
+          <span className="truncate text-[13px] font-medium text-[#3a3a3a]">The Resume Thing</span>
+        </div>
+
+        <div className="flex flex-none items-center gap-2">
           <button
             type="button"
             onClick={reset}
             disabled={busy}
-            className="inline-flex h-[33px] items-center rounded-lg border border-[rgba(0,0,0,0.12)] bg-white px-3 text-[13px] font-medium text-[#262626] hover:bg-[rgba(0,0,0,0.03)] disabled:opacity-50"
+            className="hidden h-8 items-center rounded-md px-2.5 text-[12.5px] font-medium text-[#525252] hover:bg-[rgba(0,0,0,0.06)] disabled:opacity-50 sm:inline-flex"
           >
             {resetting ? "Resetting\u2026" : "Reset to generated"}
           </button>
@@ -117,88 +153,160 @@ export function LatexEditor({ initialTex }: { initialTex: string }): React.React
             type="button"
             onClick={compile}
             disabled={busy}
-            className="inline-flex h-[33px] items-center gap-1.5 rounded-lg border border-[#262626] bg-[#262626] px-3.5 text-[13px] font-semibold text-[#fafafa] shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] hover:bg-[#333] disabled:opacity-50"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#138a07] px-3.5 text-[13px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] hover:bg-[#0f7505] disabled:opacity-60"
           >
-            {compiling ? "Compiling\u2026" : "Compile"}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="23 4 23 10 17 10" />
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+            </svg>
+            {compiling ? "Compiling\u2026" : "Recompile"}
           </button>
+          <a
+            href={`/api/resume/pdf?v=${version}`}
+            target="_blank"
+            rel="noreferrer"
+            title="Download PDF"
+            className="inline-flex size-8 items-center justify-center rounded-md border border-[rgba(0,0,0,0.14)] bg-white text-[#3a3a3a] hover:bg-[rgba(0,0,0,0.03)]"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </a>
         </div>
-      </div>
+      </header>
 
+      {/* Three panes */}
       <div className="flex min-h-0 flex-1">
-        <div className="flex w-1/2 min-w-0 flex-col border-r border-[rgba(0,0,0,0.08)]">
+        {/* Left: file tree + outline */}
+        <aside className="flex w-[232px] flex-none flex-col border-r border-[rgba(0,0,0,0.09)] bg-[#f7f7f6]">
+          <div className="flex-none px-3 pt-3 pb-1.5 font-mono text-[10.5px] tracking-wide text-[#9a9a98] uppercase">
+            File tree
+          </div>
+          <div className="flex items-center gap-2 border-l-2 border-[#138a07] bg-[#e9f3e7] px-3 py-1.5 text-[13px] font-medium text-[#155c0e]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+            resume.tex
+          </div>
+
+          <div className="flex-none px-3 pt-4 pb-1.5 font-mono text-[10.5px] tracking-wide text-[#9a9a98] uppercase">
+            Outline
+          </div>
+          <nav className="min-h-0 flex-1 overflow-auto pb-3">
+            {outline.length === 0 ? (
+              <p className="px-3 text-[12px] text-[#a8a8a6]">No sections yet.</p>
+            ) : (
+              outline.map((h) => (
+                <button
+                  key={`${h.line}-${h.title}`}
+                  type="button"
+                  onClick={() => goTo(h.line)}
+                  className="block w-full truncate px-3 py-1 text-left text-[12.5px] text-[#5a5a58] hover:bg-[rgba(0,0,0,0.05)] hover:text-[#1f1f1f]"
+                >
+                  {h.title}
+                </button>
+              ))
+            )}
+          </nav>
+        </aside>
+
+        {/* Center: code + log + AI */}
+        <section className="flex min-w-0 flex-1 flex-col border-r border-[rgba(0,0,0,0.09)]">
           <div className="min-h-0 flex-1 overflow-auto">
             <CodeMirror
               value={tex}
               onChange={(v) => setTex(v)}
+              onCreateEditor={(view) => {
+                viewRef.current = view;
+              }}
               extensions={extensions}
               height="100%"
               style={{ height: "100%", fontSize: "13px" }}
               basicSetup={{ lineNumbers: true, foldGutter: false, highlightActiveLine: true }}
             />
           </div>
+
           {log && (
-            <pre className="max-h-[140px] flex-none overflow-auto border-t border-[rgba(0,0,0,0.08)] bg-[#fff5f5] p-3 font-mono text-[11px] whitespace-pre-wrap text-[#b42318]">
+            <pre className="max-h-[130px] flex-none overflow-auto border-t border-[rgba(0,0,0,0.09)] bg-[#fff5f5] p-3 font-mono text-[11px] whitespace-pre-wrap text-[#b42318]">
               {log}
             </pre>
           )}
 
-          <div className="flex h-[240px] flex-none flex-col border-t border-[rgba(0,0,0,0.08)] bg-white">
-            <div className="flex-none border-b border-[rgba(0,0,0,0.06)] px-4 py-2 font-mono text-[11px] text-[#a0a0a0]">
-              edit with AI
-            </div>
-            <div className="min-h-0 flex-1 space-y-2 overflow-auto p-3">
-              {messages.length === 0 ? (
-                <p className="text-[12.5px] text-[#9a9a9a]">
-                  e.g. &ldquo;make the summary punchier&rdquo;, &ldquo;add a Publications section&rdquo;,
-                  &ldquo;tighten the bullets to one line each&rdquo;.
-                </p>
-              ) : (
-                messages.map((m, i) => (
-                  <div
-                    key={`${i}-${m.role}`}
-                    className={`max-w-[85%] rounded-xl px-3 py-2 text-[13px] ${
-                      m.role === "user"
-                        ? "ml-auto bg-[#262626] text-[#fafafa]"
-                        : "bg-[rgba(0,0,0,0.05)] text-[#2a2a2a]"
-                    }`}
-                  >
-                    {m.text}
-                  </div>
-                ))
-              )}
-              {aiPending && <p className="text-[12.5px] text-[#9a9a9a]">Editing…</p>}
-            </div>
-            <div className="flex flex-none items-center gap-2 border-t border-[rgba(0,0,0,0.06)] p-2.5">
-              <input
-                value={aiInput}
-                onChange={(e) => setAiInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") sendAi();
-                }}
-                placeholder="Tell the AI how to change the resume…"
-                disabled={aiPending}
-                className="h-9 min-w-0 flex-1 rounded-lg border border-[rgba(0,0,0,0.12)] px-3 text-[13px] outline-none focus:border-[rgba(0,0,0,0.28)]"
-              />
-              <button
-                type="button"
-                onClick={sendAi}
-                disabled={aiPending || !aiInput.trim()}
-                className="inline-flex h-9 items-center rounded-lg border border-[#262626] bg-[#262626] px-3.5 text-[13px] font-semibold text-[#fafafa] hover:bg-[#333] disabled:opacity-50"
+          <div className="flex flex-none flex-col border-t border-[rgba(0,0,0,0.09)] bg-white">
+            <button
+              type="button"
+              onClick={() => setAiOpen((o) => !o)}
+              className="flex flex-none items-center justify-between px-3.5 py-2 text-left font-mono text-[11px] text-[#8f8f8d] hover:bg-[rgba(0,0,0,0.02)]"
+            >
+              <span>edit with AI</span>
+              <svg
+                width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"
+                className={aiOpen ? "" : "rotate-180"}
               >
-                Send
-              </button>
-            </div>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            {aiOpen && (
+              <div className="flex h-[210px] flex-col border-t border-[rgba(0,0,0,0.06)]">
+                <div className="min-h-0 flex-1 space-y-2 overflow-auto p-3">
+                  {messages.length === 0 ? (
+                    <p className="text-[12.5px] text-[#9a9a9a]">
+                      e.g. &ldquo;make the summary punchier&rdquo;, &ldquo;add a Publications section&rdquo;,
+                      &ldquo;tighten the bullets to one line each&rdquo;.
+                    </p>
+                  ) : (
+                    messages.map((m, i) => (
+                      <div
+                        key={`${i}-${m.role}`}
+                        className={`max-w-[85%] rounded-xl px-3 py-2 text-[13px] ${
+                          m.role === "user"
+                            ? "ml-auto bg-[#262626] text-[#fafafa]"
+                            : "bg-[rgba(0,0,0,0.05)] text-[#2a2a2a]"
+                        }`}
+                      >
+                        {m.text}
+                      </div>
+                    ))
+                  )}
+                  {aiPending && <p className="text-[12.5px] text-[#9a9a9a]">Editing…</p>}
+                </div>
+                <div className="flex flex-none items-center gap-2 border-t border-[rgba(0,0,0,0.06)] p-2.5">
+                  <input
+                    value={aiInput}
+                    onChange={(e) => setAiInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") sendAi();
+                    }}
+                    placeholder="Tell the AI how to change the resume…"
+                    disabled={aiPending}
+                    className="h-9 min-w-0 flex-1 rounded-lg border border-[rgba(0,0,0,0.12)] px-3 text-[13px] outline-none focus:border-[rgba(0,0,0,0.28)]"
+                  />
+                  <button
+                    type="button"
+                    onClick={sendAi}
+                    disabled={aiPending || !aiInput.trim()}
+                    className="inline-flex h-9 items-center rounded-lg border border-[#262626] bg-[#262626] px-3.5 text-[13px] font-semibold text-[#fafafa] hover:bg-[#333] disabled:opacity-50"
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        </section>
 
-        <div className="w-1/2 min-w-0 bg-[#f3f3f2]">
+        {/* Right: PDF preview */}
+        <section className="flex min-w-0 flex-1 flex-col bg-[#f3f3f2]">
           <iframe
             key={version}
             src={`/api/resume/pdf?v=${version}`}
             title="Resume preview"
             className="h-full w-full"
           />
-        </div>
+        </section>
       </div>
     </div>
   );
