@@ -55,7 +55,7 @@ JSON payloads (`metrics`, `raw`) stored as stringified text.
   GitHub social provider; scopes `read:user`, `user:email`, `read:org` (public-data-first; `repo`/private deferred).
 - **DB/ORM:** Prisma 7 (driver adapters) + SQLite via `better-sqlite3` (dev) / Postgres (prod). Requires Node 22.
 - **GitHub API:** `@octokit/rest` (REST: profile, repos, issues/PRs via search, orgs).
-- **Synthesis:** Anthropic Claude (default) via API; provider-pluggable behind one interface.
+- **Synthesis:** Vercel AI SDK (`ai`) behind one `LlmClient` interface; provider via `LLM_PROVIDER` — Google Gemini (default) or OpenAI, swappable by env. (Was Anthropic; switched — no Anthropic key.)
 - **PDF:** `@react-pdf/renderer` — pure-JS, serverless-friendly, print-optimized. Two layouts (interactive web view + print PDF) instead of Playwright/Chromium, avoiding a native browser binary and verifiable without one.
 
 ## Build order
@@ -72,7 +72,7 @@ Code is implemented in full; these secrets are required only to exercise the flo
 
 - **GitHub OAuth app** → `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` in `.env`
   (callback `http://localhost:3000/api/auth/callback/github`). Needed for login + API.
-- **Anthropic API key** → `ANTHROPIC_API_KEY` in `.env`. Needed for synthesis (step 3).
+- **LLM provider key** → `GOOGLE_GENERATIVE_AI_API_KEY` (default) or `OPENAI_API_KEY` in `.env` (select with `LLM_PROVIDER`). Needed for synthesis (step 3).
 
 ## Verification plan
 
@@ -80,4 +80,4 @@ Code is implemented in full; these secrets are required only to exercise the flo
 - `npm run build` green — full TypeScript across all routes (`/`, `/dashboard`, `/resume`, `/api/resume/pdf`, `/api/auth`).
 - 32 Vitest unit tests: GitHub normalizers, synthesis prompt/parse, resume grouping, and a live `@react-pdf/renderer` render asserting valid PDF bytes.
 - Synthesis persistence verified end-to-end with a mocked LLM against the real DB (resume + evidence-linked items).
-- Live GitHub fetch and the Anthropic call are gated only on the secrets above.
+- Live GitHub fetch and the LLM synthesis call are gated only on the secrets above.

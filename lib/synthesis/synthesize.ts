@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { anthropicClient, type LlmClient } from "./llm";
+import { defaultLlmClient, type LlmClient } from "./llm";
 import { buildResumePrompt, type ActivityLite } from "./prompt";
 import { parseResumeDraft } from "./parse";
 
@@ -11,7 +11,7 @@ const MAX_ACTIVITIES = 150;
  */
 export async function synthesizeResume(
   userId: string,
-  llm: LlmClient = anthropicClient(),
+  llm: LlmClient = defaultLlmClient(),
 ): Promise<{ resumeId: string; itemCount: number }> {
   const rows = await prisma.activity.findMany({
     where: { userId },
