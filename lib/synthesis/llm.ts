@@ -17,16 +17,34 @@ const DEFAULT_MODELS = {
   openai: "gpt-4o-mini",
 } as const;
 
+export type LlmProvider = keyof typeof DEFAULT_MODELS;
+
+/**
+ * Resolve provider + model from env. Empty strings count as "unset" (the .env
+ * template ships LLM_MODEL="" as the default sentinel), so `||` — not `??` — is
+ * deliberate. Pure and exported for testing.
+ */
+export function resolveModelId(
+  providerEnv: string | undefined,
+  modelEnv: string | undefined,
+): { provider: LlmProvider; modelId: string } {
+  const provider = providerEnv || "google";
+  if (provider !== "google" && provider !== "openai") {
+    throw new Error(
+      `Unsupported LLM_PROVIDER "${provider}" — use "google" or "openai".`,
+    );
+  }
+  return { provider, modelId: modelEnv || DEFAULT_MODELS[provider] };
+}
+
 // Provider chosen at call time so the missing-API-key error (raised by the
 // AI SDK with a provider-specific message) only surfaces when synthesis runs.
 function resolveModel() {
-  const provider = process.env.LLM_PROVIDER ?? "google";
-  const modelId = process.env.LLM_MODEL;
-  if (provider === "openai") return openai(modelId ?? DEFAULT_MODELS.openai);
-  if (provider === "google") return google(modelId ?? DEFAULT_MODELS.google);
-  throw new Error(
-    `Unsupported LLM_PROVIDER "${provider}" — use "google" or "openai".`,
+  const { provider, modelId } = resolveModelId(
+    process.env.LLM_PROVIDER,
+    process.env.LLM_MODEL,
   );
+  return provider === "openai" ? openai(modelId) : google(modelId);
 }
 
 /**
