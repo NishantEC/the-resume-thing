@@ -1,16 +1,20 @@
 import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import { generateObject } from "ai";
+import { resumeDraftSchema, type ResumeDraft } from "./schema";
 
 /**
- * Minimal completion seam. Synthesis depends only on this interface so tests
- * can inject a fake and never touch the network.
+ * Synthesis seam. Returns a validated ResumeDraft (structured output), so
+ * callers/tests can inject a fake and never touch the network.
  */
 export interface LlmClient {
-  complete(system: string, user: string): Promise<string>;
+  draftResume(system: string, user: string): Promise<ResumeDraft>;
 }
 
-const MAX_OUTPUT_TOKENS = 2000;
+// Generous budget: thinking models (e.g. Gemini 2.5/3.x flash) spend output
+// tokens on reasoning, so a small cap can starve the JSON. Structured-output
+// mode (generateObject) keeps the response itself clean JSON.
+const MAX_OUTPUT_TOKENS = 8192;
 
 const DEFAULT_MODELS = {
   google: "gemini-3.5-flash",
@@ -37,32 +41,33 @@ export function resolveModelId(
   return { provider, modelId: modelEnv || DEFAULT_MODELS[provider] };
 }
 
-// Provider chosen at call time so the missing-API-key error (raised by the
-// AI SDK with a provider-specific message) only surfaces when synthesis runs.
-function resolveModel() {
+/**
+ * Vercel AI SDK-backed LlmClient using structured output. Provider via
+ * LLM_PROVIDER (google | openai), model via LLM_MODEL; reads the matching
+ * provider key from the environment at call time.
+ */
+export function defaultLlmClient(): LlmClient {
   const { provider, modelId } = resolveModelId(
     process.env.LLM_PROVIDER,
     process.env.LLM_MODEL,
   );
-  return provider === "openai" ? openai(modelId) : google(modelId);
-}
+  const model = provider === "openai" ? openai(modelId) : google(modelId);
 
-/**
- * Vercel AI SDK-backed LlmClient. Provider via LLM_PROVIDER (google | openai),
- * model via LLM_MODEL; reads the matching provider key from the environment
- * (GOOGLE_GENERATIVE_AI_API_KEY / OPENAI_API_KEY).
- */
-export function defaultLlmClient(): LlmClient {
-  const model = resolveModel();
   return {
-    async complete(system: string, user: string): Promise<string> {
-      const { text } = await generateText({
+    async draftResume(system: string, user: string): Promise<ResumeDraft> {
+      const startedAt = Date.now();
+      console.log(`[synthesis] llm: requesting draft from ${provider}/${modelId}`);
+      const { object } = await generateObject({
         model,
+        schema: resumeDraftSchema,
         system,
         prompt: user,
         maxOutputTokens: MAX_OUTPUT_TOKENS,
       });
-      return text;
+      console.log(
+        `[synthesis] llm: received ${object.items.length} items in ${Date.now() - startedAt}ms`,
+      );
+      return object;
     },
   };
 }

@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { defaultLlmClient, type LlmClient } from "./llm";
 import { buildResumePrompt, type ActivityLite } from "./prompt";
-import { parseResumeDraft } from "./parse";
 
 const MAX_ACTIVITIES = 150;
 
@@ -13,11 +12,14 @@ export async function synthesizeResume(
   userId: string,
   llm: LlmClient = defaultLlmClient(),
 ): Promise<{ resumeId: string; itemCount: number }> {
+  console.log(`[synthesis] start for user ${userId}`);
+
   const rows = await prisma.activity.findMany({
     where: { userId },
     orderBy: [{ occurredAt: "desc" }],
     take: MAX_ACTIVITIES,
   });
+  console.log(`[synthesis] loaded ${rows.length} activities`);
 
   const activities: ActivityLite[] = rows.map((a) => ({
     type: a.type,
@@ -31,7 +33,10 @@ export async function synthesizeResume(
   // The candidate name lives on User, not Activity; the caller-facing display
   // name is wired elsewhere, so synthesis runs name-agnostic.
   const { system, user } = buildResumePrompt({ name: "", activities });
-  const draft = parseResumeDraft(await llm.complete(system, user));
+  const draft = await llm.draftResume(system, user);
+  console.log(
+    `[synthesis] draft: headline=${JSON.stringify(draft.headline)} items=${draft.items.length}`,
+  );
 
   const resume = await prisma.resume.upsert({
     where: { userId },
@@ -65,5 +70,8 @@ export async function synthesizeResume(
     });
   }
 
+  console.log(
+    `[synthesis] persisted resume ${resume.id} with ${draft.items.length} items`,
+  );
   return { resumeId: resume.id, itemCount: draft.items.length };
 }

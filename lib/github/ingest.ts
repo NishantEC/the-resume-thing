@@ -19,6 +19,7 @@ export interface SyncResult {
 export async function syncGithub(userId: string): Promise<SyncResult> {
   const gh = await githubForUser(userId);
   const { data: me } = await gh.users.getAuthenticated();
+  console.log(`[sync] start for ${me.login} (user ${userId})`);
 
   const activities: NormalizedActivity[] = [];
 
@@ -28,23 +29,27 @@ export async function syncGithub(userId: string): Promise<SyncResult> {
     sort: "pushed",
   });
   for (const repo of repos) activities.push(normalizeRepo(repo));
+  console.log(`[sync] ${repos.length} repos`);
 
   const prs = await gh.paginate(gh.search.issuesAndPullRequests, {
     q: `author:${me.login} type:pr`,
     per_page: 100,
   });
   for (const pr of prs) activities.push(normalizeIssueOrPr(pr, "pull_request"));
+  console.log(`[sync] ${prs.length} pull requests`);
 
   const issues = await gh.paginate(gh.search.issuesAndPullRequests, {
     q: `author:${me.login} type:issue`,
     per_page: 100,
   });
   for (const issue of issues) activities.push(normalizeIssueOrPr(issue, "issue"));
+  console.log(`[sync] ${issues.length} issues`);
 
   const orgs = await gh.paginate(gh.orgs.listForAuthenticatedUser, {
     per_page: 100,
   });
   for (const org of orgs) activities.push(normalizeOrg(org));
+  console.log(`[sync] ${orgs.length} orgs; upserting ${activities.length} activities`);
 
   const byType: Record<string, number> = {};
   for (const a of activities) {
@@ -79,6 +84,7 @@ export async function syncGithub(userId: string): Promise<SyncResult> {
     },
     update: { lastSyncAt: new Date(), externalId: String(me.id) },
   });
+  console.log(`[sync] done: imported ${activities.length}`);
 
   return { imported: activities.length, byType };
 }
