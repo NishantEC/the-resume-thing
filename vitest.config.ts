@@ -8,5 +8,8 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["lib/**/*.test.ts", "app/**/*.test.ts"],
+    // Lets modules that transitively import the Prisma singleton load; the
+    // pure tests here never issue a query.
+    env: { DATABASE_URL: "file:./dev.db" },
   },
 });

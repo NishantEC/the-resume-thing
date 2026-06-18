@@ -52,11 +52,11 @@ JSON payloads (`metrics`, `raw`) stored as stringified text.
 - **App:** Next.js 16, React 19, Tailwind v4, COSS UI (already scaffolded).
 - **Auth:** **Better Auth** — chosen over Auth.js v5 for clean Next 16 compatibility and
   built-in `account` access-token storage (we need the GitHub token for ingestion).
-  GitHub social provider; scopes `read:user`, `user:email`, `read:org`, `repo`.
-- **DB/ORM:** Prisma + SQLite (dev) / Postgres (prod).
-- **GitHub API:** Octokit (GraphQL contributions + REST).
+  GitHub social provider; scopes `read:user`, `user:email`, `read:org` (public-data-first; `repo`/private deferred).
+- **DB/ORM:** Prisma 7 (driver adapters) + SQLite via `better-sqlite3` (dev) / Postgres (prod). Requires Node 22.
+- **GitHub API:** `@octokit/rest` (REST: profile, repos, issues/PRs via search, orgs).
 - **Synthesis:** Anthropic Claude (default) via API; provider-pluggable behind one interface.
-- **PDF:** headless Chromium (Playwright) rendering the resume web route → web == PDF, one layout.
+- **PDF:** `@react-pdf/renderer` — pure-JS, serverless-friendly, print-optimized. Two layouts (interactive web view + print PDF) instead of Playwright/Chromium, avoiding a native browser binary and verifiable without one.
 
 ## Build order
 
@@ -76,8 +76,8 @@ Code is implemented in full; these secrets are required only to exercise the flo
 
 ## Verification plan
 
-- Prisma schema validates; migration applies to SQLite; client generates.
-- `npm run build` (typecheck) green.
-- Ingestion mapping unit-tested against recorded GitHub fixture payloads (no network).
-- Synthesis tested with the LLM client mocked at the boundary (no network).
-- Resume render + PDF: build smoke + route test.
+- Prisma schema validates; init migration applied to SQLite; client generates; DB round-trip smoke on `better-sqlite3`/Node 22.
+- `npm run build` green — full TypeScript across all routes (`/`, `/dashboard`, `/resume`, `/api/resume/pdf`, `/api/auth`).
+- 32 Vitest unit tests: GitHub normalizers, synthesis prompt/parse, resume grouping, and a live `@react-pdf/renderer` render asserting valid PDF bytes.
+- Synthesis persistence verified end-to-end with a mocked LLM against the real DB (resume + evidence-linked items).
+- Live GitHub fetch and the Anthropic call are gated only on the secrets above.

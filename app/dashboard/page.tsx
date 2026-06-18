@@ -4,6 +4,9 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { SyncButton } from "@/components/sync-button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import { GenerateResumeButton } from "@/components/generate-resume-button";
 
 function timeAgo(date: Date | null): string {
   if (!date) return "never";
@@ -18,7 +21,7 @@ export default async function Dashboard(): Promise<React.ReactElement> {
   if (!session) redirect("/");
   const userId = session.user.id;
 
-  const [total, connection, recent, byType] = await Promise.all([
+  const [total, connection, recent, byType, resume] = await Promise.all([
     prisma.activity.count({ where: { userId } }),
     prisma.connection.findUnique({
       where: { userId_provider: { userId, provider: "github" } },
@@ -32,6 +35,10 @@ export default async function Dashboard(): Promise<React.ReactElement> {
       by: ["type"],
       where: { userId },
       _count: { _all: true },
+    }),
+    prisma.resume.findUnique({
+      where: { userId },
+      select: { id: true, _count: { select: { items: true } } },
     }),
   ]);
 
@@ -71,6 +78,26 @@ export default async function Dashboard(): Promise<React.ReactElement> {
           ))}
         </ul>
       )}
+
+      <section className="flex items-center justify-between gap-4 rounded-xl border bg-card p-4">
+        <div className="flex flex-col">
+          <span className="font-medium">Resume</span>
+          <span className="text-sm text-muted-foreground">
+            {resume ? `${resume._count.items} items synthesized` : "Not generated yet"}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {resume && (
+            <Link
+              href="/resume"
+              className={buttonVariants({ size: "sm", variant: "outline" })}
+            >
+              View resume
+            </Link>
+          )}
+          <GenerateResumeButton label={resume ? "Regenerate" : "Generate resume"} />
+        </div>
+      </section>
 
       <section className="flex flex-col gap-2">
         <h2 className="font-heading text-lg font-medium">Recent activity</h2>
