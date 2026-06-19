@@ -17,12 +17,16 @@ export interface SyncResult {
  * Pull the authenticated user's GitHub activity and upsert it into Activity.
  * Idempotent: re-running refreshes existing rows (keyed by provider+type+externalId).
  */
-export async function syncGithub(userId: string): Promise<SyncResult> {
+export async function syncGithub(userId: string, since?: Date): Promise<SyncResult> {
   const gh = await githubForUser(userId);
   const { data: me } = await gh.users.getAuthenticated();
   console.log(`[sync] start for ${me.login} (user ${userId})`);
 
   const activities: NormalizedActivity[] = [];
+  // Delta sync: when called by the continuous worker we only want work touched
+  // since the last successful sync. GitHub search accepts day-granular qualifiers.
+  const dq = since ? ` updated:>=${since.toISOString().slice(0, 10)}` : "";
+  const cq = since ? ` author-date:>=${since.toISOString().slice(0, 10)}` : "";
 
   const repos = await gh.paginate(gh.repos.listForAuthenticatedUser, {
     per_page: 100,
@@ -33,21 +37,21 @@ export async function syncGithub(userId: string): Promise<SyncResult> {
   console.log(`[sync] ${repos.length} owned repos`);
 
   const prs = await gh.paginate(gh.search.issuesAndPullRequests, {
-    q: `author:${me.login} type:pr`,
+    q: `author:${me.login} type:pr${dq}`,
     per_page: 100,
   });
   for (const pr of prs) activities.push(normalizeIssueOrPr(pr, "pull_request"));
   console.log(`[sync] ${prs.length} pull requests`);
 
   const issues = await gh.paginate(gh.search.issuesAndPullRequests, {
-    q: `author:${me.login} type:issue`,
+    q: `author:${me.login} type:issue${dq}`,
     per_page: 100,
   });
   for (const issue of issues) activities.push(normalizeIssueOrPr(issue, "issue"));
   console.log(`[sync] ${issues.length} issues`);
 
   const commits = await gh.search.commits({
-    q: `author:${me.login}`,
+    q: `author:${me.login}${cq}`,
     sort: "author-date",
     order: "desc",
     per_page: 100,

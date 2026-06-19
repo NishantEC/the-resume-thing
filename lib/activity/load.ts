@@ -9,6 +9,7 @@ export type RecentItem = {
   repo: string;
   dot: string;
   url: string;
+  provider: string;
 };
 export type ActivityView = {
   total: number;
@@ -51,7 +52,7 @@ export async function loadActivity(userId: string): Promise<ActivityView> {
     prisma.activity.findMany({
       where: { userId },
       orderBy: [{ occurredAt: "desc" }],
-      select: { id: true, title: true, type: true, url: true, metrics: true },
+      select: { id: true, title: true, type: true, url: true, metrics: true, provider: true },
     }),
     ignoreSets(userId),
     prisma.connection.findUnique({
@@ -82,13 +83,14 @@ export async function loadActivity(userId: string): Promise<ActivityView> {
   return {
     total: kept.length,
     stats,
-    recent: kept.slice(0, 8).map((a) => ({
+    recent: kept.slice(0, 14).map((a) => ({
       id: a.id,
       title: a.title,
       type: TYPE_LABEL[a.type] ?? a.type,
       repo: repoOf(a.title, a.metrics),
-      dot: a.type === "issue" ? "#f59e0b" : "#16a34a",
+      dot: a.provider === "linear" ? "#5e6ad2" : a.type === "issue" ? "#f59e0b" : "#16a34a",
       url: a.url,
+      provider: a.provider,
     })),
     lastSyncAt: connection?.lastSyncAt ?? null,
   };
