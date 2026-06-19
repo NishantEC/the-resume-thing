@@ -93,3 +93,15 @@ export async function loadActivity(userId: string): Promise<ActivityView> {
     lastSyncAt: connection?.lastSyncAt ?? null,
   };
 }
+
+/** Count kept activities not yet represented by any résumé item (drift / "behind your work"). */
+export async function countUnreflectedActivity(userId: string): Promise<number> {
+  const [rows, ignored] = await Promise.all([
+    prisma.activity.findMany({
+      where: { userId, evidenceFor: { none: {} } },
+      select: { id: true, title: true, type: true, url: true, metrics: true },
+    }),
+    ignoreSets(userId),
+  ]);
+  return filterIgnored(rows, ignored).length;
+}
