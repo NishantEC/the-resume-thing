@@ -21,12 +21,6 @@ function ago(date: Date | null): string {
 const SRC_TAG: Record<string, string> = { github: "gh", linear: "lin", jira: "jira", asana: "asana" };
 const SRC_DOT: Record<string, string> = { github: "#22c55e", linear: "#5e6ad2", jira: "#2684ff", asana: "#f45662" };
 
-const GRID = {
-  backgroundImage:
-    "linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)",
-  backgroundSize: "40px 40px",
-};
-
 export default async function HomePage(): Promise<React.ReactElement> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session!.user.id;
@@ -47,7 +41,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const hasLinear = connections.some((c) => c.provider === "linear");
 
   return (
-    <div className="min-h-screen" style={GRID}>
+    <div className="min-h-screen">
       <LiveRefresh />
       <div className="mx-auto flex max-w-[880px] flex-col gap-6 px-10 py-10">
         {/* Command line */}
