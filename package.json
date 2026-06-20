@@ -2,10 +2,13 @@
   "name": "the-resume-thing",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22 <23"
+  },
   "scripts": {
-    "dev": "next dev -p 3019",
-    "build": "next build",
-    "start": "next start -p 3019",
+    "dev": "node scripts/check-node.mjs && next dev -p 3019",
+    "build": "node scripts/check-node.mjs && next build",
+    "start": "node scripts/check-node.mjs && next start -p 3019",
     "lint": "eslint",
     "test": "vitest run"
   },
