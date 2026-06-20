@@ -4,7 +4,6 @@ import { auth } from "@/lib/auth";
 import { loadResume } from "@/lib/resume/load";
 import { loadActivity, countUnreflectedActivity } from "@/lib/activity/load";
 import { loadConnections } from "@/lib/sources/connections";
-import { SuggestionsQueue } from "@/components/app/suggestions-queue";
 import { SyncButton } from "@/components/app/sync-button";
 import { GenerateButton } from "@/components/app/generate-button";
 import { LiveRefresh } from "@/components/app/live-refresh";
@@ -154,7 +153,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
               </div>
             ) : null}
 
-            {/* Inbox */}
+            {/* Review */}
             <section className="flex flex-col gap-3 [animation:screenIn_.4s_ease_both] [animation-delay:160ms]">
               <div className="flex items-baseline justify-between">
                 <h2 className="m-0 font-mono text-[13px] font-semibold tracking-tight text-foreground">inbox</h2>
@@ -167,8 +166,31 @@ export default async function HomePage(): Promise<React.ReactElement> {
                   </span>
                   <GenerateButton />
                 </div>
+              ) : pending === 0 ? (
+                <div className="flex items-center gap-2 rounded-[14px] border border-border bg-card px-5 py-4 font-mono text-[12.5px] text-muted-foreground">
+                  <span className="text-signal">✓</span> all checks reviewed — your résumé is current
+                </div>
               ) : (
-                <SuggestionsQueue groups={resume!.groups} />
+                <Link
+                  href="/review"
+                  className="group flex items-center justify-between gap-4 rounded-[14px] border border-border bg-card px-5 py-4 hover:border-signal/50 hover:bg-accent"
+                >
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[14px] font-semibold text-foreground">
+                      {pending} {pending === 1 ? "check" : "checks"} to review
+                    </span>
+                    <span className="font-mono text-[11.5px] text-muted-foreground">
+                      apply or dismiss AI-drafted bullets beside a live résumé
+                    </span>
+                  </div>
+                  <span className="inline-flex h-8 flex-none items-center gap-1.5 rounded-[7px] border border-signal/40 bg-signal/10 px-3 font-mono text-[12px] text-signal">
+                    review
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  </span>
+                </Link>
               )}
             </section>
 

@@ -124,6 +124,7 @@ model Resume {
   summary   String?
   skills    String?      // JSON text: [{ label, list }]
   tex       String?      // user-edited LaTeX source (overrides generated when set)
+  template  String       @default("modern") // résumé LaTeX template id (see lib/latex/template.ts)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   items     ResumeItem[]

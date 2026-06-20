@@ -1,7 +1,17 @@
 import type { ResumeView } from "@/lib/resume/load";
 import { escapeLatex } from "./escape";
 
-export type TemplateName = "modern" | "classic";
+export type TemplateName = "modern" | "classic" | "palatino" | "charter" | "compact" | "twocol";
+
+/** Selectable templates with display labels — single source for the picker UI. */
+export const TEMPLATES: { id: TemplateName; label: string; blurb: string }[] = [
+  { id: "modern", label: "Modern", blurb: "Helvetica sans, clean" },
+  { id: "classic", label: "Classic", blurb: "Serif, small-caps sections" },
+  { id: "palatino", label: "Palatino", blurb: "Elegant serif" },
+  { id: "charter", label: "Charter", blurb: "Crisp serif" },
+  { id: "compact", label: "Compact", blurb: "Dense, one-page" },
+  { id: "twocol", label: "Two-column", blurb: "Space-saving" },
+];
 
 export interface ResumeTexInput {
   view: ResumeView;
@@ -43,6 +53,68 @@ const PREAMBLE: Record<TemplateName, string> = {
     "\\titleformat{\\section}{\\large\\scshape}{}{0em}{}[{\\titlerule}]",
     "\\titlespacing{\\section}{0pt}{14pt}{6pt}",
     "\\setlist[itemize]{leftmargin=1.2em,itemsep=2pt,topsep=2pt}",
+    "\\pagestyle{empty}",
+  ].join("\n"),
+  palatino: [
+    "\\documentclass[11pt,a4paper]{article}",
+    "\\usepackage[margin=1.8cm]{geometry}",
+    "\\usepackage{enumitem}",
+    "\\usepackage{titlesec}",
+    "\\usepackage[hidelinks]{hyperref}",
+    "\\usepackage{xcolor}",
+    "\\usepackage{mathpazo}",
+    "\\definecolor{accent}{HTML}{1C1C1C}",
+    "\\definecolor{muted}{HTML}{555555}",
+    "\\titleformat{\\section}{\\large\\bfseries\\color{accent}}{}{0em}{}[{\\titlerule}]",
+    "\\titlespacing{\\section}{0pt}{14pt}{6pt}",
+    "\\setlist[itemize]{leftmargin=1.2em,itemsep=2pt,topsep=2pt}",
+    "\\pagestyle{empty}",
+  ].join("\n"),
+  charter: [
+    "\\documentclass[11pt,a4paper]{article}",
+    "\\usepackage[margin=1.8cm]{geometry}",
+    "\\usepackage{enumitem}",
+    "\\usepackage{titlesec}",
+    "\\usepackage[hidelinks]{hyperref}",
+    "\\usepackage{xcolor}",
+    "\\usepackage[charter]{mathdesign}",
+    "\\definecolor{accent}{HTML}{1C1C1C}",
+    "\\definecolor{muted}{HTML}{555555}",
+    "\\titleformat{\\section}{\\large\\bfseries\\color{accent}}{}{0em}{}[{\\titlerule}]",
+    "\\titlespacing{\\section}{0pt}{14pt}{6pt}",
+    "\\setlist[itemize]{leftmargin=1.2em,itemsep=2pt,topsep=2pt}",
+    "\\pagestyle{empty}",
+  ].join("\n"),
+  compact: [
+    "\\documentclass[10pt,a4paper]{article}",
+    "\\usepackage[margin=1.1cm]{geometry}",
+    "\\usepackage{enumitem}",
+    "\\usepackage{titlesec}",
+    "\\usepackage[hidelinks]{hyperref}",
+    "\\usepackage{xcolor}",
+    "\\usepackage{helvet}",
+    "\\renewcommand{\\familydefault}{\\sfdefault}",
+    "\\definecolor{accent}{HTML}{1C1C1C}",
+    "\\definecolor{muted}{HTML}{6B6B6B}",
+    "\\titleformat{\\section}{\\normalsize\\bfseries\\color{accent}}{}{0em}{}[{\\titlerule}]",
+    "\\titlespacing{\\section}{0pt}{8pt}{3pt}",
+    "\\setlist[itemize]{leftmargin=1em,itemsep=1pt,topsep=1pt}",
+    "\\pagestyle{empty}",
+  ].join("\n"),
+  twocol: [
+    "\\documentclass[10pt,a4paper,twocolumn]{article}",
+    "\\usepackage[margin=1.2cm,columnsep=1cm]{geometry}",
+    "\\usepackage{enumitem}",
+    "\\usepackage{titlesec}",
+    "\\usepackage[hidelinks]{hyperref}",
+    "\\usepackage{xcolor}",
+    "\\usepackage{helvet}",
+    "\\renewcommand{\\familydefault}{\\sfdefault}",
+    "\\definecolor{accent}{HTML}{1C1C1C}",
+    "\\definecolor{muted}{HTML}{6B6B6B}",
+    "\\titleformat{\\section}{\\normalsize\\bfseries\\color{accent}}{}{0em}{}[{\\titlerule}]",
+    "\\titlespacing{\\section}{0pt}{10pt}{4pt}",
+    "\\setlist[itemize]{leftmargin=1em,itemsep=1pt,topsep=1pt}",
     "\\pagestyle{empty}",
   ].join("\n"),
 };

@@ -3,11 +3,13 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { effectiveResumeTex } from "@/lib/latex/resume-tex";
 import { LatexEditor } from "@/components/app/latex-editor";
+import { prisma } from "@/lib/prisma";
 
 export default async function ResumePage(): Promise<React.ReactElement> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session!.user.id;
   const tex = await effectiveResumeTex(userId, session!.user.name || session!.user.email);
+  const resume = await prisma.resume.findUnique({ where: { userId }, select: { template: true } });
 
   if (!tex) {
     return (
@@ -25,5 +27,5 @@ export default async function ResumePage(): Promise<React.ReactElement> {
     );
   }
 
-  return <LatexEditor initialTex={tex} />;
+  return <LatexEditor initialTex={tex} template={resume?.template ?? "modern"} />;
 }

@@ -1,7 +1,7 @@
 import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { generateObject, generateText } from "ai";
-import { bulletSchema, resumeDraftSchema, type ResumeDraft } from "./schema";
+import { bulletSchema, resumeDraftSchema, variantsSchema, type ResumeDraft } from "./schema";
 
 /**
  * Synthesis seam. Returns validated structured output, so callers/tests can
@@ -10,6 +10,7 @@ import { bulletSchema, resumeDraftSchema, type ResumeDraft } from "./schema";
 export interface LlmClient {
   draftResume(system: string, user: string): Promise<ResumeDraft>;
   rewriteBullet(system: string, user: string): Promise<string>;
+  rewriteVariants(system: string, user: string): Promise<string[]>;
   editLatex(currentTex: string, instruction: string): Promise<string>;
 }
 
@@ -81,6 +82,17 @@ export function defaultLlmClient(): LlmClient {
         maxOutputTokens: 1024,
       });
       return object.content;
+    },
+
+    async rewriteVariants(system: string, user: string): Promise<string[]> {
+      const { object } = await generateObject({
+        model,
+        schema: variantsSchema,
+        system,
+        prompt: user,
+        maxOutputTokens: 1024,
+      });
+      return object.variants;
     },
 
     async editLatex(currentTex: string, instruction: string): Promise<string> {

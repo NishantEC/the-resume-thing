@@ -1,16 +1,20 @@
 import { prisma } from "@/lib/prisma";
 import { loadResume } from "@/lib/resume/load";
-import { renderResumeTex } from "./template";
+import { renderResumeTex, type TemplateName } from "./template";
 
 async function renderFromView(userId: string, name: string): Promise<string | null> {
   const view = await loadResume(userId);
   if (!view) return null;
-  const connection = await prisma.connection.findUnique({
-    where: { userId_provider: { userId, provider: "github" } },
-    select: { handle: true },
-  });
+  const [connection, resume] = await Promise.all([
+    prisma.connection.findUnique({
+      where: { userId_provider: { userId, provider: "github" } },
+      select: { handle: true },
+    }),
+    prisma.resume.findUnique({ where: { userId }, select: { template: true } }),
+  ]);
   const contact = connection?.handle ? `github.com/${connection.handle}` : undefined;
-  return renderResumeTex({ view, name, contact });
+  const template = (resume?.template ?? "modern") as TemplateName;
+  return renderResumeTex({ view, name, contact, template });
 }
 
 /** Stored manual LaTeX if present, otherwise freshly generated from the resume. */

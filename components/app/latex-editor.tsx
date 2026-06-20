@@ -12,15 +12,18 @@ import {
   aiEditLatexAction,
   resetLatexAction,
   saveLatexAction,
+  setTemplateAction,
 } from "@/app/actions";
+import { TEMPLATES } from "@/lib/latex/template";
 
 type ChatMsg = { role: "user" | "assistant"; text: string };
 type Heading = { title: string; line: number };
 
 const SECTION_RE = /\\(?:sub)?section\*?\{([^}]*)\}/;
 
-export function LatexEditor({ initialTex }: { initialTex: string }): React.ReactElement {
+export function LatexEditor({ initialTex, template }: { initialTex: string; template: string }): React.ReactElement {
   const [tex, setTex] = useState(initialTex);
+  const [tpl, setTpl] = useState(template);
   const [version, setVersion] = useState(0);
   const [log, setLog] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
@@ -45,6 +48,21 @@ export function LatexEditor({ initialTex }: { initialTex: string }): React.React
   const reset = () => {
     startReset(async () => {
       const r = await resetLatexAction();
+      if (r.tex != null) {
+        setTex(r.tex);
+        setLog(null);
+        setVersion((v) => v + 1);
+      }
+    });
+  };
+
+  const changeTemplate = (name: string) => {
+    if (name === tpl || busy) return;
+    if (!window.confirm("Switch template? This regenerates the résumé from your accepted items and replaces the current LaTeX source.")) return;
+    startReset(async () => {
+      await setTemplateAction(name);
+      const r = await resetLatexAction();
+      setTpl(name);
       if (r.tex != null) {
         setTex(r.tex);
         setLog(null);
@@ -143,6 +161,17 @@ export function LatexEditor({ initialTex }: { initialTex: string }): React.React
 
         <div className="flex flex-none items-center gap-2">
           <ThemeToggle className="inline-flex size-8 flex-none items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground" />
+          <select
+            value={tpl}
+            onChange={(e) => changeTemplate(e.target.value)}
+            disabled={busy}
+            title="Résumé template"
+            className="hidden h-8 rounded-md border border-border bg-card px-2 text-[12.5px] text-foreground hover:bg-accent disabled:opacity-50 sm:inline-flex"
+          >
+            {TEMPLATES.map((t) => (
+              <option key={t.id} value={t.id}>{t.label}</option>
+            ))}
+          </select>
           <button
             type="button"
             onClick={reset}

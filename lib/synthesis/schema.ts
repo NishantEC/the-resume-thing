@@ -86,3 +86,18 @@ export const bulletSchema = jsonSchema<{ content: string }>({
   },
   required: ["content"],
 });
+
+export const variantsSchema = jsonSchema<{ variants: string[] }>({
+  type: "object",
+  properties: {
+    variants: {
+      type: "array",
+      description: "Exactly 3 short, distinct, evidence-grounded rewrites of the resume bullet.",
+      items: {
+        type: "string",
+        description: "One impactful, evidence-grounded resume bullet — a single line.",
+      },
+    },
+  },
+  required: ["variants"],
+});

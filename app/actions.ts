@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { syncGithub, type SyncResult } from "@/lib/github/ingest";
 import { synthesizeResume } from "@/lib/synthesis/synthesize";
-import { regenerateItem } from "@/lib/synthesis/regenerate";
+import { regenerateItem, regenerateItemVariants } from "@/lib/synthesis/regenerate";
 import { defaultLlmClient } from "@/lib/synthesis/llm";
 import { tryCompileLatex } from "@/lib/latex/compile";
 import { generatedResumeTex } from "@/lib/latex/resume-tex";
@@ -20,6 +20,7 @@ async function requireUserId(): Promise<string> {
 function revalidateWorkspace(): void {
   revalidatePath("/home");
   revalidatePath("/resume");
+  revalidatePath("/review");
 }
 
 export async function syncGithubAction(): Promise<SyncResult> {
@@ -85,12 +86,50 @@ export async function regenerateItemAction(id: string): Promise<{ content: strin
   return result;
 }
 
+export async function regenerateVariantsAction(id: string): Promise<{ variants: string[] }> {
+  const userId = await requireUserId();
+  return regenerateItemVariants(id, userId);
+}
+
+export async function reorderItemAction(id: string, direction: "up" | "down"): Promise<void> {
+  const userId = await requireUserId();
+  const item = await prisma.resumeItem.findFirst({
+    where: { id, resume: { userId } },
+    select: { id: true, order: true, project: true, resumeId: true },
+  });
+  if (!item) throw new Error("Resume item not found");
+
+  const siblings = await prisma.resumeItem.findMany({
+    where: { resumeId: item.resumeId, project: item.project, status: { not: "dismissed" } },
+    orderBy: { order: "asc" },
+    select: { id: true, order: true },
+  });
+
+  const index = siblings.findIndex((s) => s.id === item.id);
+  const neighborIndex = direction === "up" ? index - 1 : index + 1;
+  const neighbor = siblings[neighborIndex];
+  if (!neighbor) return;
+
+  await prisma.$transaction([
+    prisma.resumeItem.update({ where: { id: item.id }, data: { order: neighbor.order } }),
+    prisma.resumeItem.update({ where: { id: neighbor.id }, data: { order: item.order } }),
+  ]);
+
+  revalidateWorkspace();
+}
+
 export async function dismissItemAction(id: string): Promise<void> {
   const userId = await requireUserId();
   await prisma.resumeItem.updateMany({
     where: { id, resume: { userId } },
     data: { status: "dismissed" },
   });
+  revalidateWorkspace();
+}
+
+export async function setTemplateAction(template: string): Promise<void> {
+  const userId = await requireUserId();
+  await prisma.resume.updateMany({ where: { userId }, data: { template } });
   revalidateWorkspace();
 }
 
