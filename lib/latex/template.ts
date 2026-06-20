@@ -11,7 +11,9 @@ export type TemplateName =
   | "deedy"
   | "avenir"
   | "georgia"
-  | "cobalt";
+  | "cobalt"
+  | "optima"
+  | "techmono";
 
 type SectionStyle = "rule" | "smallcaps" | "plain" | "bar";
 type Layout = "single" | "twocol" | "sidebar";
@@ -37,6 +39,8 @@ interface TemplateSpec {
   sidebarBg: string | null;
   /** Tighter list/section spacing for dense one-pagers. */
   tight: boolean;
+  /** Optional display font for the name + section headings. */
+  headingFont?: string;
 }
 
 /**
@@ -95,6 +99,17 @@ const SPECS: Record<TemplateName, TemplateSpec> = {
     pt: 11, margin: "1.6cm", font: "Helvetica Neue", accent: "1D4ED8", muted: "64748B",
     section: "bar", layout: "single", icons: true, sidebarBg: null, tight: false,
   },
+  optima: {
+    label: "Optima", blurb: "Humanist, refined",
+    pt: 11, margin: "1.7cm", font: "Optima", accent: "0F766E", muted: "5B6B66",
+    section: "rule", layout: "single", icons: false, sidebarBg: null, tight: false,
+  },
+  techmono: {
+    label: "Terminal", blurb: "Mono headings, dev-style",
+    pt: 11, margin: "1.6cm", font: "Helvetica Neue", accent: "15803D", muted: "6B6B6B",
+    section: "plain", layout: "single", icons: true, sidebarBg: null, tight: false,
+    headingFont: "Menlo",
+  },
 };
 
 /** Selectable templates with display labels — single source for the picker UI. */
@@ -115,7 +130,8 @@ function escUrl(url: string): string {
 }
 
 function sectionFormat(spec: TemplateSpec): string {
-  const head = spec.tight ? "\\normalsize" : "\\large";
+  const hf = spec.headingFont ? "\\headingfont" : "";
+  const head = `${spec.tight ? "\\normalsize" : "\\large"}${hf}`;
   if (spec.section === "smallcaps") {
     return `\\titleformat{\\section}{${head}\\scshape\\color{accent}}{}{0em}{}[{\\color{accent}\\titlerule}]`;
   }
@@ -146,6 +162,7 @@ function buildPreamble(spec: TemplateSpec): string {
   lines.push("\\usepackage{xcolor}");
   lines.push("\\usepackage{fontspec}");
   if (spec.font) lines.push(`\\setmainfont{${spec.font}}`);
+  if (spec.headingFont) lines.push(`\\newfontfamily\\headingfont{${spec.headingFont}}`);
   if (spec.icons) lines.push("\\usepackage{fontawesome}");
   lines.push(`\\definecolor{accent}{HTML}{${spec.accent}}`);
   lines.push(`\\definecolor{muted}{HTML}{${spec.muted}}`);
@@ -167,7 +184,8 @@ function contactTex(contact: string, icons: boolean): string {
 }
 
 function header(name: string, headline: string | null, contact: string | undefined, spec: TemplateSpec): string {
-  const lines = [`{\\huge\\bfseries\\color{accent} ${esc(name)}}\\\\[3pt]`];
+  const hf = spec.headingFont ? "\\headingfont" : "";
+  const lines = [`{\\huge${hf}\\bfseries\\color{accent} ${esc(name)}}\\\\[3pt]`];
   if (headline) lines.push(`{\\large\\color{muted} ${esc(headline)}}\\\\[2pt]`);
   if (contact) lines.push(`{\\small\\color{muted} ${contactTex(contact, spec.icons)}}\\\\[6pt]`);
   lines.push("{\\color{accent}\\hrule height 0.6pt}");
