@@ -157,7 +157,9 @@ export async function dismissItemAction(id: string): Promise<void> {
 
 export async function setTemplateAction(template: string): Promise<void> {
   const userId = await requireUserId();
-  await prisma.resume.updateMany({ where: { userId }, data: { template } });
+  const rid = await activeResumeId(userId);
+  if (!rid) return;
+  await prisma.resume.update({ where: { id: rid }, data: { template } });
   revalidateWorkspace();
 }
 

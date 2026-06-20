@@ -15,6 +15,8 @@ import {
   setTemplateAction,
 } from "@/app/actions";
 import { TEMPLATES } from "@/lib/latex/template";
+import { TemplateGallery } from "@/components/app/template-gallery";
+import type { TemplateName } from "@/lib/latex/template";
 
 type ChatMsg = { role: "user" | "assistant"; text: string };
 type Heading = { title: string; line: number };
@@ -29,12 +31,14 @@ export function LatexEditor({ initialTex, template }: { initialTex: string; temp
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [aiInput, setAiInput] = useState("");
   const [aiOpen, setAiOpen] = useState(true);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const [compiling, startCompile] = useTransition();
   const [aiPending, startAi] = useTransition();
   const [resetting, startReset] = useTransition();
   const viewRef = useRef<EditorView | null>(null);
 
   const busy = compiling || aiPending || resetting;
+  const tplLabel = TEMPLATES.find((t) => t.id === tpl)?.label ?? "Template";
 
   const compile = () => {
     setLog(null);
@@ -137,6 +141,17 @@ export function LatexEditor({ initialTex, template }: { initialTex: string; temp
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-background text-foreground">
+      {galleryOpen ? (
+        <TemplateGallery
+          active={tpl}
+          busy={busy}
+          onClose={() => setGalleryOpen(false)}
+          onPick={(id: TemplateName) => {
+            setGalleryOpen(false);
+            changeTemplate(id);
+          }}
+        />
+      ) : null}
       {/* Top bar */}
       <header className="flex h-12 flex-none items-center justify-between gap-3 border-b border-border bg-card px-3">
         <div className="flex min-w-0 items-center gap-2.5">
@@ -161,17 +176,21 @@ export function LatexEditor({ initialTex, template }: { initialTex: string; temp
 
         <div className="flex flex-none items-center gap-2">
           <ThemeToggle className="inline-flex size-8 flex-none items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground" />
-          <select
-            value={tpl}
-            onChange={(e) => changeTemplate(e.target.value)}
+          <button
+            type="button"
+            onClick={() => setGalleryOpen(true)}
             disabled={busy}
             title="Résumé template"
-            className="hidden h-8 rounded-md border border-border bg-card px-2 text-[12.5px] text-foreground hover:bg-accent disabled:opacity-50 sm:inline-flex"
+            className="hidden h-8 items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-[12.5px] text-foreground hover:bg-accent disabled:opacity-50 sm:inline-flex"
           >
-            {TEMPLATES.map((t) => (
-              <option key={t.id} value={t.id}>{t.label}</option>
-            ))}
-          </select>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+            </svg>
+            {tplLabel}
+          </button>
           <button
             type="button"
             onClick={reset}
