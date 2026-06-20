@@ -7,6 +7,7 @@ import { loadConnections } from "@/lib/sources/connections";
 import { SyncButton } from "@/components/app/sync-button";
 import { GenerateButton } from "@/components/app/generate-button";
 import { LiveRefresh } from "@/components/app/live-refresh";
+import { activeResumeId } from "@/lib/resume/active";
 
 function ago(date: Date | null): string {
   if (!date) return "never";
@@ -24,8 +25,9 @@ const SRC_DOT: Record<string, string> = { github: "#22c55e", linear: "#5e6ad2", 
 export default async function HomePage(): Promise<React.ReactElement> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session!.user.id;
+  const rid = await activeResumeId(userId);
   const [resume, activity, drift, connections] = await Promise.all([
-    loadResume(userId),
+    rid ? loadResume(rid) : Promise.resolve(null),
     loadActivity(userId),
     countUnreflectedActivity(userId),
     loadConnections(userId),

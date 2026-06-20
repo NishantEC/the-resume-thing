@@ -58,7 +58,12 @@ export async function runSyncPass(): Promise<{ users: number; imported: number }
     try {
       const r = await syncAllSources(userId);
       imported += r.total;
-      await synthesizeResume(userId);
+      const recent = await prisma.resume.findFirst({
+        where: { userId },
+        orderBy: { updatedAt: "desc" },
+        select: { id: true },
+      });
+      if (recent) await synthesizeResume(recent.id);
     } catch (err) {
       console.error(`[worker] user ${userId} failed:`, err);
     }

@@ -4,10 +4,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/app/theme-toggle";
+import { ResumeSwitcher, type ResumeOption } from "@/components/app/resume-switcher";
 
 export type SidebarData = {
   name: string;
   handle: string | null;
+  resumes: ResumeOption[];
+  activeResumeId: string | null;
 };
 
 function initials(name: string): string {
@@ -71,6 +74,8 @@ export function Sidebar(props: SidebarData): React.ReactElement {
         {LogoMark}
         <span className="font-mono text-[12.5px] text-muted-foreground">the resume thing</span>
       </div>
+
+      <ResumeSwitcher resumes={props.resumes} activeId={props.activeResumeId} />
 
       <nav className="flex flex-col gap-0.5">
         {items.map((item) => {

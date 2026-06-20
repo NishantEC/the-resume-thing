@@ -121,9 +121,9 @@ export function parseSkills(raw: string | null): Skill[] {
   }
 }
 
-export async function loadResume(userId: string): Promise<ResumeView | null> {
+export async function loadResume(resumeId: string): Promise<ResumeView | null> {
   const resume = await prisma.resume.findUnique({
-    where: { userId },
+    where: { id: resumeId },
     include: {
       items: { where: { status: { not: "dismissed" } }, orderBy: { order: "asc" }, include: { evidence: true } },
     },

@@ -4,12 +4,15 @@ import { auth } from "@/lib/auth";
 import { effectiveResumeTex } from "@/lib/latex/resume-tex";
 import { LatexEditor } from "@/components/app/latex-editor";
 import { prisma } from "@/lib/prisma";
+import { activeResumeId } from "@/lib/resume/active";
 
 export default async function ResumePage(): Promise<React.ReactElement> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session!.user.id;
-  const tex = await effectiveResumeTex(userId, session!.user.name || session!.user.email);
-  const resume = await prisma.resume.findUnique({ where: { userId }, select: { template: true } });
+  const rid = await activeResumeId(userId);
+  const name = session!.user.name || session!.user.email;
+  const tex = rid ? await effectiveResumeTex(rid, name) : null;
+  const resume = rid ? await prisma.resume.findUnique({ where: { id: rid }, select: { template: true } }) : null;
 
   if (!tex) {
     return (

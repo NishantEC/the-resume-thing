@@ -28,7 +28,7 @@ model User {
   accounts    Account[]
   connections Connection[]
   activities  Activity[]
-  resume      Resume?
+  resumes     Resume[]
   ignoredRepos IgnoredRepo[]
   ignoredOrgs  IgnoredOrg[]
 }
@@ -115,11 +115,13 @@ model Activity {
   @@index([userId, occurredAt])
 }
 
-/// The synthesized, user-editable resume (one per user for the MVP).
+/// A synthesized, user-editable résumé. A user can have many — one per target role.
 model Resume {
   id        String       @id @default(cuid())
-  userId    String       @unique
+  userId    String
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String       @default("Résumé")
+  targetRole  String?      // role / JD this résumé is tailored toward
   headline  String?
   summary   String?
   skills    String?      // JSON text: [{ label, list }]
@@ -128,6 +130,8 @@ model Resume {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   items     ResumeItem[]
+
+  @@index([userId])
 }
 
 /// A single synthesized line/section, linked to its evidence Activities.

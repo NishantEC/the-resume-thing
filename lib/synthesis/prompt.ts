@@ -75,6 +75,7 @@ function serializeActivity(a: ActivityLite): string {
 export function buildResumePrompt(input: {
   name: string;
   activities: ActivityLite[];
+  targetRole?: string;
 }): { system: string; user: string } {
   const system = [
     "You are an expert technical resume writer.",
@@ -101,7 +102,12 @@ export function buildResumePrompt(input: {
       ? input.activities.map(serializeActivity).join("\n")
       : "(no activity available)";
 
-  const user = [header, "", "Activity log:", body, "", "Produce the ResumeDraft now."].join("\n");
+  const role = input.targetRole?.trim();
+  const roleLine = role
+    ? `Target role: ${role}\nTailor the résumé toward this role — prioritize the most relevant work, phrase accomplishments to match it, and order items by relevance.`
+    : null;
+
+  const user = [header, ...(roleLine ? ["", roleLine] : []), "", "Activity log:", body, "", "Produce the ResumeDraft now."].join("\n");
 
   return { system, user };
 }

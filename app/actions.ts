@@ -1,6 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -10,6 +10,7 @@ import { regenerateItem, regenerateItemVariants } from "@/lib/synthesis/regenera
 import { defaultLlmClient } from "@/lib/synthesis/llm";
 import { tryCompileLatex } from "@/lib/latex/compile";
 import { generatedResumeTex } from "@/lib/latex/resume-tex";
+import { activeResumeId, ACTIVE_RESUME_COOKIE } from "@/lib/resume/active";
 
 async function requireUserId(): Promise<string> {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -36,9 +37,36 @@ export async function generateResumeAction(): Promise<{
   itemCount: number;
 }> {
   const userId = await requireUserId();
-  const result = await synthesizeResume(userId);
+  let resumeId = await activeResumeId(userId);
+  if (!resumeId) {
+    const created = await prisma.resume.create({ data: { userId }, select: { id: true } });
+    resumeId = created.id;
+  }
+  const result = await synthesizeResume(resumeId);
   revalidateWorkspace();
   return result;
+}
+
+export async function createResumeAction(input: {
+  title: string;
+  targetRole?: string;
+}): Promise<{ resumeId: string }> {
+  const userId = await requireUserId();
+  const title = input.title.trim() || "Résumé";
+  const targetRole = input.targetRole?.trim() || null;
+  const resume = await prisma.resume.create({ data: { userId, title, targetRole }, select: { id: true } });
+  (await cookies()).set(ACTIVE_RESUME_COOKIE, resume.id, { path: "/", httpOnly: true, sameSite: "lax" });
+  await synthesizeResume(resume.id);
+  revalidateWorkspace();
+  return { resumeId: resume.id };
+}
+
+export async function setActiveResumeAction(resumeId: string): Promise<void> {
+  const userId = await requireUserId();
+  const owned = await prisma.resume.findFirst({ where: { id: resumeId, userId }, select: { id: true } });
+  if (!owned) throw new Error("Resume not found");
+  (await cookies()).set(ACTIVE_RESUME_COOKIE, resumeId, { path: "/", httpOnly: true, sameSite: "lax" });
+  revalidateWorkspace();
 }
 
 export async function acceptItemAction(id: string): Promise<void> {
@@ -173,9 +201,11 @@ export async function saveLatexAction(
   tex: string,
 ): Promise<{ ok: boolean; log?: string }> {
   const userId = await requireUserId();
+  const rid = await activeResumeId(userId);
+  if (!rid) return { ok: false, log: "No active résumé." };
   const result = await tryCompileLatex(tex);
   if (!result.ok) return { ok: false, log: result.log };
-  await prisma.resume.updateMany({ where: { userId }, data: { tex } });
+  await prisma.resume.update({ where: { id: rid }, data: { tex } });
   revalidatePath("/resume");
   return { ok: true };
 }
@@ -183,15 +213,12 @@ export async function saveLatexAction(
 export async function resetLatexAction(): Promise<{ ok: true; tex: string | null }> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not authenticated");
-  await prisma.resume.updateMany({
-    where: { userId: session.user.id },
-    data: { tex: null },
-  });
+  const name = session.user.name || session.user.email;
+  const rid = await activeResumeId(session.user.id);
+  if (!rid) return { ok: true, tex: null };
+  await prisma.resume.update({ where: { id: rid }, data: { tex: null } });
   revalidatePath("/resume");
-  const tex = await generatedResumeTex(
-    session.user.id,
-    session.user.name || session.user.email,
-  );
+  const tex = await generatedResumeTex(rid, name);
   return { ok: true, tex };
 }
 
@@ -200,10 +227,11 @@ export async function aiEditLatexAction(
   currentTex: string,
 ): Promise<{ ok: boolean; tex: string; log?: string }> {
   const userId = await requireUserId();
+  const rid = await activeResumeId(userId);
   const newTex = await defaultLlmClient().editLatex(currentTex, instruction);
   const result = await tryCompileLatex(newTex);
   if (!result.ok) return { ok: false, tex: newTex, log: result.log };
-  await prisma.resume.updateMany({ where: { userId }, data: { tex: newTex } });
+  if (rid) await prisma.resume.update({ where: { id: rid }, data: { tex: newTex } });
   revalidatePath("/resume");
   return { ok: true, tex: newTex };
 }
